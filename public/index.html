@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiteSentinel - Comprehensive Website Security Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🔐 SiteSentinel</h1>
+                <p class="tagline">Comprehensive Website Security & Performance Analysis</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <form id="analyzeForm">
+                        <div class="form-group">
+                            <label for="urlInput">Enter URL to Analyze:</label>
+                            <div class="input-wrapper">
+                                <input 
+                                    type="text" 
+                                    id="urlInput" 
+                                    name="url" 
+                                    placeholder="e.g., example.com or https://example.com"
+                                    required
+                                    autocomplete="off"
+                                >
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="btn-text">Analyze</span>
+                                    <span class="btn-loader" style="display: none;">⚙️ Analyzing...</span>
+                                </button>
+                            </div>
+                            <p class="form-help">Safe and legal analysis. No hacking or unauthorized access.</p>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <!-- Summary Card -->
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <h2>Analysis Summary</h2>
+                        <div class="score-display">
+                            <div class="score-circle" id="scoreCircle">
+                                <span class="score-value" id="scoreValue">0</span>
+                                <span class="score-label">/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="summary-stats">
+                        <div class="stat">
+                            <div class="stat-number passed" id="passedCount">0</div>
+                            <div class="stat-label">Passed</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number warning" id="warningCount">0</div>
+                            <div class="stat-label">Warnings</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number failed" id="failedCount">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" style="color: #666;" id="totalCount">0</div>
+                            <div class="stat-label">Total Checks</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- URL Analyzed -->
+                <div class="url-analyzed">
+                    <strong>URL:</strong> <span id="analyzedUrl"></span>
+                    <strong>Analyzed:</strong> <span id="analyzedTime"></span>
+                </div>
+
+                <!-- Results by Category -->
+                <div id="categoriesContainer" class="categories-container">
+                    <!-- Categories will be populated here -->
+                </div>
+
+                <!-- Export Button -->
+                <div class="export-section">
+                    <button class="btn btn-secondary" id="exportBtn">📥 Export Report</button>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section id="errorSection" class="error-section" style="display: none;">
+                <div class="error-card">
+                    <h3>❌ Analysis Failed</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </section>
+
+            <!-- Loading Section -->
+            <section id="loadingSection" class="loading-section" style="display: none;">
+                <div class="loader-container">
+                    <div class="loader"></div>
+                    <p>Analyzing website...</p>
+                    <p class="loader-note">This may take 10-30 seconds depending on the site</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>SiteSentinel © 2025 | Secure, Legal, and Comprehensive Web Analysis</p>
+            <p class="footer-note">All checks are performed using public APIs and safe methods. No unauthorized access or hacking.</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>

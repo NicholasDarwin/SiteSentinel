@@ -1,0 +1,15 @@
+{
+  "name": "sitesentinel",
+  "version": "1.0.0",
+  "description": "Website Security Analysis Tool",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
