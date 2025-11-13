@@ -1,12 +1,29 @@
 {
   "name": "sitesentinel",
-  "version": "1.0.0",
-  "description": "Website Security Analysis Tool",
-  "main": "server.js",
+  "version": "2.0.0",
+  "description": "Professional Website Security & Performance Analysis Platform with 60+ comprehensive checks",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NicholasDarwin/SiteSentinel.git"
+  },
+  "keywords": [
+    "security",
+    "website-analysis",
+    "ssl-tls",
+    "dns-security",
+    "seo",
+    "performance",
+    "accessibility",
+    "web-audit",
+    "security-analysis"
+  ],
+  "author": "Nicholas Darwin",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.2",
