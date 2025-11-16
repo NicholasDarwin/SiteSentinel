@@ -64,7 +64,7 @@ class SafetyCheck {
         }
 
         // Detect phishing redirect/confirmation scams ("click to confirm you are not a bot")
-        const phishingPatterns = /click.*confirm.*not.*bot|click.*verify|confirm.*human|click\.php|redirect\.php|campaign_id|click_id=|zoneid=|_pd=/i;
+        const phishingPatterns = /click\.php|redirect\.php|click_id=|zoneid=|_pd=.*durframet\.com|_pd=.*chroelhome\.com/i;
         if (phishingPatterns.test(body) || phishingPatterns.test(urlLower)) {
           malwareDetected = true;
           detectionDetails = `Phishing redirect scam detected: fake verification/CAPTCHA prompt`;
