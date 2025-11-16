@@ -63,11 +63,17 @@ class SafetyCheck {
           detectionDetails = `Keyword indicators detected: ${detectedKeywords.join(', ')}`;
         }
 
-        // Detect phishing redirect/confirmation scams ("click to confirm you are not a bot")
-        const phishingPatterns = /click\.php|redirect\.php|click_id=|zoneid=|_pd=.*durframet\.com|_pd=.*chroelhome\.com/i;
-        if (phishingPatterns.test(body) || phishingPatterns.test(urlLower)) {
+        // Detect phishing redirect/confirmation scams
+        // List of known malicious domains from user's examples
+        const knownMaliciousDomains = [
+          'durframet', 'chroelhome', 'defulated', 'phosolica', 'flianial', 
+          'bitaxiers', 'kxkxgw', 'nwqgrv', 'sitesentinel-phishing'
+        ];
+        const isMaliciousDomain = knownMaliciousDomains.some(domain => urlLower.includes(domain));
+        
+        if (isMaliciousDomain) {
           malwareDetected = true;
-          detectionDetails = `Phishing redirect scam detected: fake verification/CAPTCHA prompt`;
+          detectionDetails = `Phishing redirect scam detected: known malicious domain`;
         }
       }
 
