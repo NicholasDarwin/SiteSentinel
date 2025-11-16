@@ -21,9 +21,9 @@ class PerformanceCheck {
 
       checks.push({
         name: 'Page Load Time',
-        status: loadTime < 2000 ? 'pass' : loadTime < 4000 ? 'warn' : 'fail',
-        description: `Load time: ${loadTime}ms ${loadTime < 2000 ? '(Excellent)' : loadTime < 4000 ? '(Acceptable)' : '(Slow)'}`,
-        severity: 'high'
+        status: loadTime < 3000 ? 'pass' : loadTime < 5000 ? 'warn' : 'fail',
+        description: `Load time: ${loadTime}ms ${loadTime < 3000 ? '(Excellent)' : loadTime < 5000 ? '(Acceptable)' : '(Slow)'}`,
+        severity: 'medium'
       });
 
       // 2. HTTP/2 or HTTP/3 Support
@@ -39,18 +39,18 @@ class PerformanceCheck {
       const contentEncoding = response.headers['content-encoding'];
       checks.push({
         name: 'Content Compression',
-        status: contentEncoding ? 'pass' : 'warn',
+        status: contentEncoding ? 'pass' : 'info',
         description: contentEncoding ? `Compression enabled: ${contentEncoding}` : 'No compression detected',
-        severity: 'high'
+        severity: 'low'
       });
 
       // 4. Cache Control Headers
       const cacheControl = response.headers['cache-control'];
       checks.push({
         name: 'Browser Caching',
-        status: cacheControl ? 'pass' : 'warn',
+        status: cacheControl ? 'pass' : 'info',
         description: cacheControl ? `Cache-Control: ${cacheControl}` : 'No cache policy set',
-        severity: 'medium'
+        severity: 'low'
       });
 
       // 5. CDN Usage (check Server header)
