@@ -58,12 +58,31 @@ class SiteSentinelApp {
         body: JSON.stringify({ url })
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Analysis failed');
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error(`Invalid JSON response from server: ${e.message}`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Analysis failed');
+      }
+
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Server returned invalid response format');
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Analysis was not successful');
+      }
+
+      if (!data.overall || typeof data.overall.score === 'undefined') {
+        console.error('Invalid response structure:', data);
+        throw new Error('Server returned data without score');
+      }
+
       this.analysisData = data;
       this.displayResults(data);
     } catch (error) {
@@ -76,10 +95,22 @@ class SiteSentinelApp {
   }
 
   displayResults(data) {
-    // Defensive checks
-    if (!data || !data.overall || typeof data.overall.score === 'undefined') {
-      alert('Invalid analysis response received');
-      console.error('Invalid data:', data);
+    // Comprehensive validation
+    if (!data || typeof data !== 'object') {
+      console.error('Invalid data type:', typeof data);
+      alert('Invalid analysis response received (invalid type)');
+      return;
+    }
+    
+    if (!data.overall) {
+      console.error('Missing overall object:', data);
+      alert('Invalid analysis response received (missing overall)');
+      return;
+    }
+    
+    if (typeof data.overall.score !== 'number' || data.overall.score === undefined || data.overall.score === null) {
+      console.error('Invalid score:', data.overall.score, typeof data.overall.score);
+      alert('Invalid analysis response received (missing score)');
       return;
     }
     
@@ -101,6 +132,12 @@ class SiteSentinelApp {
     this.categoriesGrid.innerHTML = '';
     
     const categories = data.categories || [];
+    if (!Array.isArray(categories)) {
+      console.error('Categories is not an array:', categories);
+      alert('Invalid categories format');
+      return;
+    }
+    
     categories.forEach(category => {
       const card = this.createCategoryCard(category);
       this.categoriesGrid.appendChild(card);
