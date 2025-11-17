@@ -33,6 +33,44 @@ class LinkAnalysisCheck {
       const suspiciousLinks = [];
       const redirectLinks = [];
 
+      // Check for meta refresh redirects (common in phishing)
+      const metaRefresh = $('meta[http-equiv="refresh"]').attr('content');
+      if (metaRefresh) {
+        const urlMatch = metaRefresh.match(/url=(.+?)(?:;|$)/i);
+        if (urlMatch) {
+          const redirectUrl = urlMatch[1].replace(/['"]/g, '').trim();
+          if (this.isSuspiciousDomain(redirectUrl)) {
+            suspiciousLinks.push({
+              source: 'Meta Refresh',
+              redirectTo: redirectUrl,
+              reason: 'Automatic redirect to suspicious domain'
+            });
+          }
+        }
+      }
+
+      // Check for JavaScript redirects
+      const scripts = $('script').text().toLowerCase();
+      const jsRedirectPatterns = [
+        /window\.location\s*=\s*['"]([^'"]+)['"]/gi,
+        /window\.location\.href\s*=\s*['"]([^'"]+)['"]/gi,
+        /window\.location\.replace\s*\(\s*['"]([^'"]+)['"]\s*\)/gi
+      ];
+
+      for (const pattern of jsRedirectPatterns) {
+        let match;
+        while ((match = pattern.exec(scripts)) !== null) {
+          const redirectUrl = match[1];
+          if (this.isSuspiciousDomain(redirectUrl)) {
+            suspiciousLinks.push({
+              source: 'JavaScript Redirect',
+              redirectTo: redirectUrl,
+              reason: 'JavaScript redirect to suspicious domain'
+            });
+          }
+        }
+      }
+
       // Extract all links from the page
       $('a[href]').each((i, el) => {
         const href = $(el).attr('href');
@@ -172,7 +210,16 @@ class LinkAnalysisCheck {
       /ow\.ly/i,
       /clickbank/i,
       /tracking/i,
-      /analytics.*redirect/i
+      /analytics.*redirect/i,
+      // Crypto/gambling redirect patterns
+      /whitebit\.com/i,
+      /binance.*redirect/i,
+      /kraken.*redirect/i,
+      /bitget/i,
+      /bybit/i,
+      /crypto.*casino/i,
+      /gambling.*app/i,
+      /sports.*betting/i
     ];
 
     return suspiciousDomainPatterns.some(pattern => pattern.test(urlLower));

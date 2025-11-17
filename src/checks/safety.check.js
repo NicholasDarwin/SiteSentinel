@@ -61,6 +61,15 @@ class SafetyCheck {
         }
       }
 
+      // Check for suspicious domain patterns and redirect behavior
+      if (!malwareDetected) {
+        const domainSuspiciousness = this.checkDomainReputation(hostname, url);
+        if (domainSuspiciousness.isSuspicious) {
+          malwareDetected = true;
+          detectionDetails = domainSuspiciousness.reason;
+        }
+      }
+
       checks.push({
         name: 'Malware/Phishing Indicators',
         status: malwareDetected ? 'fail' : 'info',
@@ -231,6 +240,68 @@ class SafetyCheck {
     }
 
     return false;
+  }
+
+  /**
+   * Check domain reputation for suspicious patterns
+   * Detects newly registered domains with suspicious TLDs and patterns
+   */
+  checkDomainReputation(hostname, url) {
+    const hostnameLower = hostname.toLowerCase();
+    
+    // Suspicious TLDs commonly used for phishing/malware
+    const suspiciousTLDs = [
+      '.shop', '.click', '.download', '.stream', '.trade',
+      '.site', '.online', '.website', '.app', '.store',
+      '.host', '.cloud', '.work', '.top', '.bid',
+      '.faith', '.review', '.tk', '.ml', '.ga', '.cf'
+    ];
+
+    for (const tld of suspiciousTLDs) {
+      if (hostnameLower.endsWith(tld)) {
+        // Check for additional red flags
+        const subdomain = hostnameLower.replace(tld, '');
+        
+        // Random character patterns (common in scam domains)
+        if (/^[a-z]{2,}\./.test(subdomain) && subdomain.match(/[a-z]/g).length < 10) {
+          // Random 2-20 char subdomains on suspicious TLDs
+          return {
+            isSuspicious: true,
+            reason: `Suspicious domain pattern: ${tld} TLD with obfuscated subdomain`
+          };
+        }
+
+        // Generic brand names with suspicious TLDs (typosquatting)
+        if (/^(bank|crypto|wallet|trading|exchange|payment|secure)/.test(subdomain)) {
+          return {
+            isSuspicious: true,
+            reason: `Typosquatting attempt: Generic financial service brand on suspicious ${tld} TLD`
+          };
+        }
+
+        // Multiple random string segments
+        if ((subdomain.match(/\./g) || []).length > 1) {
+          return {
+            isSuspicious: true,
+            reason: `Suspicious subdomain pattern on ${tld} TLD`
+          };
+        }
+      }
+    }
+
+    // Check for URL parameters that look like tracking/redirect IDs
+    const url_lower = url.toLowerCase();
+    const hasSuspiciousParams = /[?&](param_\d+|id|redirect|url|click_id|ref|utm|goto)=/i.test(url_lower) &&
+                                /[?&]param_\d+=\d{6,}/.test(url_lower); // Long numeric IDs
+    
+    if (hasSuspiciousParams && hostnameLower.includes('.shop')) {
+      return {
+        isSuspicious: true,
+        reason: 'Suspicious redirect pattern with numeric tracking IDs on shop domain'
+      };
+    }
+
+    return { isSuspicious: false };
   }
 }
 
