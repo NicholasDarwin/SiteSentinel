@@ -87,6 +87,23 @@
       <!-- Categories Grid -->
       <div class="categories-grid" id="categoriesGrid"></div>
 
+      <!-- AI Security Insights -->
+      <section id="aiSection" class="card" style="display:none; margin-top:16px;">
+        <h2>AI Security Insights</h2>
+        <p>Ask questions about vulnerabilities and safety risks identified in your analysis.</p>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <input id="aiQuestion" type="text" placeholder="What are the top risks and fixes?" style="flex:1;" />
+          <button id="aiAskBtn" class="btn btn-primary">Ask AI</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap: wrap;">
+          <button class="btn btn-outline aiQ" data-q="List critical security misconfigurations and exact fixes">Top Risks</button>
+          <button class="btn btn-outline aiQ" data-q="Which security headers are missing and how to add them?">Headers</button>
+          <button class="btn btn-outline aiQ" data-q="Any malware, phishing, or suspicious redirects?">Safety</button>
+          <button class="btn btn-outline aiQ" data-q="Prioritized checklist to improve score quickly">Checklist</button>
+        </div>
+        <pre id="aiAnswer" style="white-space:pre-wrap; background:#0b1220; color:#dbeafe; padding:12px; border-radius:8px; min-height:64px;"></pre>
+      </section>
+
       <!-- Action Buttons -->
       <div class="results-actions">
         <button id="newAnalysisBtn" class="btn btn-secondary">Analyze Another URL</button>

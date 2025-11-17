@@ -4,6 +4,7 @@
  */
 
 const express = require('express');
+require('dotenv').config();
 const path = require('path');
 const logger = require('./utils/logger.util');
 
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use('/api', require('./routes/analyze.route'));
+app.use('/api/ai', require('./routes/ai.route'));
 
 // Root route - serve index.html
 app.get('/', (req, res) => {
