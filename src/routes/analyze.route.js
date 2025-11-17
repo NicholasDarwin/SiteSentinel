@@ -41,32 +41,30 @@ router.post('/analyze', async (req, res) => {
 
     logger.info(`Analyzing URL: ${validatedUrl}`);
 
+    // Helper to safely wrap check execution
+    const safeCheck = async (checkFn, checkName, fallbackIcon) => {
+      try {
+        const result = await checkFn;
+        // Ensure result is valid
+        if (!result || typeof result !== 'object' || !('score' in result)) {
+          logger.warn(`${checkName} returned invalid result:`, result);
+          return { category: checkName, icon: fallbackIcon, score: 0, checks: [{ name: 'Invalid Response', status: 'error', description: 'Check returned invalid data', severity: 'critical' }] };
+        }
+        return result;
+      } catch (err) {
+        logger.error(`${checkName} error:`, err);
+        return { category: checkName, icon: fallbackIcon, score: 0, checks: [{ name: 'Error', status: 'error', description: String(err?.message || err || 'Unknown error'), severity: 'critical' }] };
+      }
+    };
+
     // Run all checks in parallel for better performance
     const [security, dns, performance, seo, accessibility, safety] = await Promise.all([
-      new SecurityCheck().analyze(validatedUrl).catch(err => {
-        logger.error('SecurityCheck error:', err);
-        return { category: 'Security & HTTPS', icon: '🔒', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
-      }),
-      new DnsCheck().analyze(validatedUrl).catch(err => {
-        logger.error('DnsCheck error:', err);
-        return { category: 'DNS & Domain', icon: '🌐', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
-      }),
-      new PerformanceCheck().analyze(validatedUrl).catch(err => {
-        logger.error('PerformanceCheck error:', err);
-        return { category: 'Performance', icon: '⚡', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
-      }),
-      new SeoCheck().analyze(validatedUrl).catch(err => {
-        logger.error('SeoCheck error:', err);
-        return { category: 'SEO & Meta', icon: '📱', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
-      }),
-      new AccessibilityCheck().analyze(validatedUrl).catch(err => {
-        logger.error('AccessibilityCheck error:', err);
-        return { category: 'Accessibility', icon: '♿', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
-      }),
-      new SafetyCheck().analyze(validatedUrl).catch(err => {
-        logger.error('SafetyCheck error:', err);
-        return { category: 'Safety & Threats', icon: '⚠️', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
-      })
+      safeCheck(new SecurityCheck().analyze(validatedUrl), 'Security & HTTPS', '🔒'),
+      safeCheck(new DnsCheck().analyze(validatedUrl), 'DNS & Domain', '🌐'),
+      safeCheck(new PerformanceCheck().analyze(validatedUrl), 'Performance', '⚡'),
+      safeCheck(new SeoCheck().analyze(validatedUrl), 'SEO & Meta', '📱'),
+      safeCheck(new AccessibilityCheck().analyze(validatedUrl), 'Accessibility', '♿'),
+      safeCheck(new SafetyCheck().analyze(validatedUrl), 'Safety & Threats', '⚠️')
     ]);
 
     // Compile all categories
