@@ -78,20 +78,20 @@
         <div class="score-details">
           <h3>Overall Security Score</h3>
           <p>Your website's comprehensive security and quality rating across 6 major categories.</p>
+          
+          <!-- AI Assessment (inline) -->
+          <div id="aiAssessmentCard" class="ai-assessment-inline" style="display:none;">
+            <div class="ai-inline-header">
+              <span class="ai-inline-badge">🤖 AI Assessment</span>
+              <span class="ai-inline-score" id="aiScore">--</span>
+            </div>
+            <div class="ai-inline-message" id="aiMessage">Analyzing security posture...</div>
+          </div>
+          
           <div class="score-breakdown">
             <div class="breakdown-item" id="scoreBreakdown"></div>
           </div>
         </div>
-      </div>
-
-      <!-- AI Assessment Card -->
-      <div id="aiAssessmentCard" class="ai-assessment-card" style="display:none;">
-        <div class="ai-badge">🤖 AI Assessment</div>
-        <div class="ai-score-section">
-          <div class="ai-score-label">AI Security Score</div>
-          <div class="ai-score-value" id="aiScore">--</div>
-        </div>
-        <div class="ai-message" id="aiMessage">Analyzing security posture...</div>
       </div>
 
       <!-- Categories Grid -->
