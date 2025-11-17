@@ -76,9 +76,16 @@ class SiteSentinelApp {
   }
 
   displayResults(data) {
+    // Defensive checks
+    if (!data || !data.overall || typeof data.overall.score === 'undefined') {
+      alert('Invalid analysis response received');
+      console.error('Invalid data:', data);
+      return;
+    }
+    
     // Update overall score
     this.overallScore.textContent = data.overall.score;
-    this.scoreLabel.textContent = data.overall.label;
+    this.scoreLabel.textContent = data.overall.label || 'Unknown';
     
     // Apply color gradient to overall score circle
     const scoreColor = this.getScoreColor(data.overall.score);
@@ -88,12 +95,13 @@ class SiteSentinelApp {
     }
     
     // Update URL
-    this.analyzedUrl.textContent = data.url;
+    this.analyzedUrl.textContent = data.url || 'Unknown';
 
     // Display categories
     this.categoriesGrid.innerHTML = '';
     
-    data.categories.forEach(category => {
+    const categories = data.categories || [];
+    categories.forEach(category => {
       const card = this.createCategoryCard(category);
       this.categoriesGrid.appendChild(card);
     });
@@ -104,17 +112,24 @@ class SiteSentinelApp {
   }
 
   createCategoryCard(category) {
+    // Defensive checks
+    if (!category || typeof category.score === 'undefined') {
+      console.warn('Invalid category:', category);
+      return document.createElement('div');
+    }
+    
     const card = document.createElement('div');
     card.className = 'category-card';
     
     const scoreColor = this.getScoreColor(category.score);
+    const checks = category.checks || [];
     
     card.innerHTML = `
       <div class="category-card-header">
-        <div class="category-icon">${category.icon}</div>
+        <div class="category-icon">${category.icon || '❓'}</div>
         <div class="category-title">
-          <h3>${category.category}</h3>
-          <div class="category-score">${category.checks.length} checks</div>
+          <h3>${category.category || 'Unknown'}</h3>
+          <div class="category-score">${checks.length} checks</div>
         </div>
         <div class="category-badge" style="background: ${scoreColor}">
           ${category.score}/100
