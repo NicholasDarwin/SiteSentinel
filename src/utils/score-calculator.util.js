@@ -31,11 +31,22 @@ function calculateCategoryScore(checks) {
 }
 
 function calculateOverallScore(categories) {
-  // Filter out any undefined or null categories
-  const validCategories = categories.filter(cat => cat && typeof cat === 'object' && 'score' in cat);
-  if (validCategories.length === 0) return 0;
-  const scores = validCategories.map(cat => cat.score || 0);
-  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  // Extra defensive checks
+  if (!Array.isArray(categories) || categories.length === 0) {
+    return 0;
+  }
+  
+  // Filter and validate
+  const validScores = categories
+    .filter(cat => cat && typeof cat === 'object' && 'score' in cat && typeof cat.score === 'number')
+    .map(cat => cat.score);
+  
+  if (validScores.length === 0) {
+    return 0;
+  }
+  
+  const sum = validScores.reduce((a, b) => a + b, 0);
+  return Math.round(sum / validScores.length);
 }
 
 function getScoreLabel(score) {

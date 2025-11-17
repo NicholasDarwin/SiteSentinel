@@ -75,10 +75,19 @@ router.post('/analyze', async (req, res) => {
       seo,
       accessibility,
       safety
-    ].filter(cat => cat && typeof cat === 'object' && 'score' in cat);
+    ];
+
+    logger.info(`Categories received: ${categories.length}, Valid: ${categories.filter(c => c && 'score' in c).length}`);
+    categories.forEach((cat, idx) => {
+      logger.debug(`Category ${idx}:`, { hasScore: cat && 'score' in cat, type: typeof cat, keys: cat ? Object.keys(cat) : 'null' });
+    });
+
+    // Filter to only valid categories
+    const validCategories = categories.filter(cat => cat && typeof cat === 'object' && 'score' in cat);
 
     // Ensure we have at least some categories
-    if (categories.length === 0) {
+    if (validCategories.length === 0) {
+      logger.error('No valid categories after filtering');
       return res.status(500).json({
         error: 'All analysis checks failed',
         success: false
@@ -86,10 +95,10 @@ router.post('/analyze', async (req, res) => {
     }
 
     // Calculate overall score
-    let overallScore = calculateOverallScore(categories);
+    let overallScore = calculateOverallScore(validCategories);
 
     // If any category reports a confirmed malware detection, force overall score to 0
-    const malwareDetected = categories.some(cat => cat.malwareDetected === true);
+    const malwareDetected = validCategories.some(cat => cat && cat.malwareDetected === true);
     if (malwareDetected) {
       overallScore = 0;
     }
@@ -106,7 +115,7 @@ router.post('/analyze', async (req, res) => {
         label: scoreLabel,
         color: scoreColor
       },
-      categories
+      categories: validCategories
     };
 
     logger.info(`Analysis completed for ${validatedUrl}. Score: ${overallScore}/${100}`);
