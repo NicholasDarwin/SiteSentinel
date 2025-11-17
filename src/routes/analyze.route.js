@@ -43,12 +43,30 @@ router.post('/analyze', async (req, res) => {
 
     // Run all checks in parallel for better performance
     const [security, dns, performance, seo, accessibility, safety] = await Promise.all([
-      new SecurityCheck().analyze(validatedUrl),
-      new DnsCheck().analyze(validatedUrl),
-      new PerformanceCheck().analyze(validatedUrl),
-      new SeoCheck().analyze(validatedUrl),
-      new AccessibilityCheck().analyze(validatedUrl),
-      new SafetyCheck().analyze(validatedUrl)
+      new SecurityCheck().analyze(validatedUrl).catch(err => {
+        logger.error('SecurityCheck error:', err);
+        return { category: 'Security & HTTPS', icon: '🔒', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
+      }),
+      new DnsCheck().analyze(validatedUrl).catch(err => {
+        logger.error('DnsCheck error:', err);
+        return { category: 'DNS & Domain', icon: '🌐', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
+      }),
+      new PerformanceCheck().analyze(validatedUrl).catch(err => {
+        logger.error('PerformanceCheck error:', err);
+        return { category: 'Performance', icon: '⚡', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
+      }),
+      new SeoCheck().analyze(validatedUrl).catch(err => {
+        logger.error('SeoCheck error:', err);
+        return { category: 'SEO & Meta', icon: '📱', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
+      }),
+      new AccessibilityCheck().analyze(validatedUrl).catch(err => {
+        logger.error('AccessibilityCheck error:', err);
+        return { category: 'Accessibility', icon: '♿', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
+      }),
+      new SafetyCheck().analyze(validatedUrl).catch(err => {
+        logger.error('SafetyCheck error:', err);
+        return { category: 'Safety & Threats', icon: '⚠️', score: 0, checks: [{ name: 'Error', status: 'error', description: err.message, severity: 'critical' }] };
+      })
     ]);
 
     // Compile all categories
