@@ -123,10 +123,27 @@ router.post('/analyze', async (req, res) => {
 
   } catch (error) {
     logger.error('Analysis error', error);
-    res.status(500).json({ 
-      error: 'Analysis failed',
-      details: error.message,
-      success: false 
+    // Return a valid response structure even on error
+    res.status(200).json({ 
+      success: true,
+      url: validatedUrl || 'unknown',
+      timestamp: new Date().toISOString(),
+      overall: {
+        score: 0,
+        label: 'Error',
+        color: '#dc2626'
+      },
+      categories: [{
+        category: 'Analysis Error',
+        icon: '❌',
+        score: 0,
+        checks: [{
+          name: 'Error',
+          status: 'error',
+          description: error.message || 'An unexpected error occurred during analysis',
+          severity: 'critical'
+        }]
+      }]
     });
   }
 });
