@@ -77,7 +77,15 @@ router.post('/analyze', async (req, res) => {
       seo,
       accessibility,
       safety
-    ];
+    ].filter(cat => cat && typeof cat === 'object' && 'score' in cat);
+
+    // Ensure we have at least some categories
+    if (categories.length === 0) {
+      return res.status(500).json({
+        error: 'All analysis checks failed',
+        success: false
+      });
+    }
 
     // Calculate overall score
     let overallScore = calculateOverallScore(categories);

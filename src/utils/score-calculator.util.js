@@ -31,7 +31,10 @@ function calculateCategoryScore(checks) {
 }
 
 function calculateOverallScore(categories) {
-  const scores = categories.map(cat => cat.score);
+  // Filter out any undefined or null categories
+  const validCategories = categories.filter(cat => cat && typeof cat === 'object' && 'score' in cat);
+  if (validCategories.length === 0) return 0;
+  const scores = validCategories.map(cat => cat.score || 0);
   return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 }
 
