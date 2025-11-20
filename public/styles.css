@@ -252,14 +252,132 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* About page: slightly smaller brand logo to keep the header compact */
-.page-about .brand-logo {
-  width: 28px;
-  height: 28px;
+/* About page styling */
+.page-about .pro-hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-/* About page: avoid large img styles interfering with any future images */
-.page-about img { max-width: 100%; height: auto; }
+.page-about .pro-hero h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--primary-color);
+}
+
+.page-about .pro-hero .lead {
+  font-size: 1.2em;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.page-about .about-highlights {
+  padding: 40px 20px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.page-about .highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-about .highlight-card {
+  text-align: center;
+  padding: 32px 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page-about .highlight-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.page-about .highlight-number {
+  font-size: 3em;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+}
+
+.page-about .highlight-card h3 {
+  font-size: 1.25em;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.page-about .highlight-card p {
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.page-about .about-details {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.page-about .detail-block {
+  margin-bottom: 40px;
+}
+
+.page-about .detail-block h2 {
+  font-size: 1.8em;
+  margin-bottom: 12px;
+  color: var(--primary-color);
+}
+
+.page-about .detail-block p {
+  font-size: 1.05em;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.page-about .cta-section {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: white;
+  margin-top: 40px;
+}
+
+.page-about .cta-section h2 {
+  font-size: 2em;
+  margin-bottom: 12px;
+}
+
+.page-about .cta-section p {
+  font-size: 1.1em;
+  margin-bottom: 24px;
+  opacity: 0.95;
+}
+
+.page-about .cta-button {
+  display: inline-block;
+  padding: 14px 32px;
+  background: white;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.page-about .cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
 
 .nav-link {
   text-decoration: none;
