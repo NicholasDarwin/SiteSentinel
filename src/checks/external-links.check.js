@@ -1,6 +1,6 @@
 /**
  * External Links Check
- * Lists all external links found on the page
+ * Lists all external links found on the page using Puppeteer for dynamic content
  */
 
 const axios = require('axios');
@@ -13,6 +13,16 @@ class ExternalLinksCheck {
     const hostname = new URL(url).hostname;
 
     try {
+      // Try to use Puppeteer for dynamic link detection if available
+      let dynamicLinks = [];
+      try {
+        const puppeteer = require('puppeteer');
+        dynamicLinks = await this.extractDynamicLinks(url, hostname, puppeteer);
+      } catch (puppeteerError) {
+        // Puppeteer not available, continue with static analysis only
+        console.log('Puppeteer not available, using static analysis only');
+      }
+
       const response = await axios.get(url, {
         timeout: 15000,
         validateStatus: () => true,
@@ -163,8 +173,9 @@ class ExternalLinksCheck {
         }
       });
 
-      // Remove duplicates
-      const uniqueExternalLinks = [...new Set(externalLinks)];
+      // Remove duplicates and merge with dynamic links
+      const allLinks = [...externalLinks, ...dynamicLinks];
+      const uniqueExternalLinks = [...new Set(allLinks)];
 
       // Generate checks
       checks.push({
@@ -218,6 +229,161 @@ class ExternalLinksCheck {
         externalLinks: [],
         externalDomains: []
       };
+    }
+  }
+
+  async extractDynamicLinks(url, hostname, puppeteer) {
+    const dynamicLinks = [];
+    let browser = null;
+
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      });
+
+      const page = await browser.newPage();
+      
+      // Track all network requests for external links
+      const requestedUrls = new Set();
+      page.on('request', request => {
+        const requestUrl = request.url();
+        try {
+          const requestHostname = new URL(requestUrl).hostname;
+          if (requestHostname !== hostname && (requestUrl.startsWith('http://') || requestUrl.startsWith('https://'))) {
+            requestedUrls.add(requestUrl);
+          }
+        } catch (e) {
+          // Skip invalid URLs
+        }
+      });
+
+      await page.goto(url, { 
+        waitUntil: 'networkidle2', 
+        timeout: 30000 
+      });
+
+      // Extract all links from the page after JavaScript execution
+      const extractedLinks = await page.evaluate((pageHostname) => {
+        const links = [];
+        
+        // Get all anchor tags
+        document.querySelectorAll('a[href]').forEach(el => {
+          const href = el.href;
+          if (href) {
+            try {
+              const linkHostname = new URL(href).hostname;
+              if (linkHostname !== pageHostname) {
+                links.push(href);
+              }
+            } catch (e) {}
+          }
+        });
+
+        // Get all elements with onclick
+        document.querySelectorAll('[onclick]').forEach(el => {
+          const onclick = el.getAttribute('onclick');
+          if (onclick) {
+            const urlMatches = onclick.match(/['"]https?:\/\/[^'"]+['"]/g);
+            if (urlMatches) {
+              urlMatches.forEach(match => {
+                const url = match.replace(/['"]/g, '');
+                try {
+                  const linkHostname = new URL(url).hostname;
+                  if (linkHostname !== pageHostname) {
+                    links.push(url);
+                  }
+                } catch (e) {}
+              });
+            }
+          }
+        });
+
+        // Get form actions
+        document.querySelectorAll('form[action]').forEach(el => {
+          const action = el.action;
+          if (action) {
+            try {
+              const linkHostname = new URL(action).hostname;
+              if (linkHostname !== pageHostname) {
+                links.push(action);
+              }
+            } catch (e) {}
+          }
+        });
+
+        // Get iframes
+        document.querySelectorAll('iframe[src]').forEach(el => {
+          const src = el.src;
+          if (src) {
+            try {
+              const linkHostname = new URL(src).hostname;
+              if (linkHostname !== pageHostname) {
+                links.push(src);
+              }
+            } catch (e) {}
+          }
+        });
+
+        return links;
+      }, hostname);
+
+      dynamicLinks.push(...extractedLinks);
+
+      // Click on all clickable elements and capture any navigation attempts
+      await page.evaluate(() => {
+        const clickableSelectors = [
+          'button', 'a', '[role="button"]', '[onclick]', 
+          'input[type="button"]', 'input[type="submit"]',
+          '[data-url]', '[data-href]', '[data-link]'
+        ];
+        
+        clickableSelectors.forEach(selector => {
+          document.querySelectorAll(selector).forEach((el, index) => {
+            // Only click first 50 of each type to avoid too many interactions
+            if (index < 50) {
+              try {
+                el.click();
+              } catch (e) {}
+            }
+          });
+        });
+      });
+
+      // Wait a bit for any dynamic content to load
+      await page.waitForTimeout(2000);
+
+      // Extract links again after clicking
+      const afterClickLinks = await page.evaluate((pageHostname) => {
+        const links = [];
+        document.querySelectorAll('a[href]').forEach(el => {
+          const href = el.href;
+          if (href) {
+            try {
+              const linkHostname = new URL(href).hostname;
+              if (linkHostname !== pageHostname) {
+                links.push(href);
+              }
+            } catch (e) {}
+          }
+        });
+        return links;
+      }, hostname);
+
+      dynamicLinks.push(...afterClickLinks);
+
+      // Add all network-requested URLs
+      dynamicLinks.push(...Array.from(requestedUrls));
+
+      await browser.close();
+
+      return [...new Set(dynamicLinks)]; // Remove duplicates
+    } catch (error) {
+      if (browser) {
+        await browser.close();
+      }
+      console.error('Dynamic link extraction error:', error.message);
+      return dynamicLinks;
     }
   }
 }
