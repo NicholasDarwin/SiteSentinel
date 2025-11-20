@@ -6,7 +6,7 @@
   <title>SiteSentinel — Docs</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="page-docs">
   <nav class="navbar">
     <div class="container">
       <div class="navbar-brand">
@@ -24,15 +24,107 @@
     </div>
   </nav>
 
-  <main class="page container">
-    <h1>Documentation</h1>
-    <p>Quick API endpoints and setup notes:</p>
-    <ul>
-      <li><code>POST /api/analyze</code> — run a scan (body: { url })</li>
-      <li><code>GET /api/health</code> — service health</li>
-      <li>AI endpoints are optional and controlled via environment configuration</li>
-    </ul>
-    <p>See <code>QUICKSTART.md</code> in the repo for setup instructions.</p>
+  <main>
+    <header class="pro-hero">
+      <h1>API Documentation</h1>
+      <p class="lead">Simple REST API for website security scanning. Fast integration with clear endpoints and JSON responses.</p>
+    </header>
+
+    <section class="docs-content">
+      <article class="doc-section">
+        <h2>Core Endpoints</h2>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="http-method post">POST</span>
+            <code class="endpoint-path">/api/analyze</code>
+          </div>
+          <p class="endpoint-desc">Run a comprehensive security scan on any website</p>
+          <div class="code-block">
+<pre>{
+  "url": "https://example.com"
+}</pre>
+          </div>
+          <p class="endpoint-note"><strong>Returns:</strong> Security score, category breakdowns, detailed findings, and remediation steps</p>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="http-method get">GET</span>
+            <code class="endpoint-path">/api/health</code>
+          </div>
+          <p class="endpoint-desc">Check service health and availability</p>
+          <p class="endpoint-note"><strong>Returns:</strong> Status and uptime information</p>
+        </div>
+      </article>
+
+      <article class="doc-section">
+        <h2>Optional AI Endpoints</h2>
+        <p class="info-note">AI features require <code>ENABLE_AI=1</code> and valid <code>OPENAI_API_KEY</code> in environment</p>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="http-method post">POST</span>
+            <code class="endpoint-path">/api/ai/quick-assessment</code>
+          </div>
+          <p class="endpoint-desc">Get AI-powered quick assessment with prioritized insights</p>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="http-method post">POST</span>
+            <code class="endpoint-path">/api/ai/security-insights</code>
+          </div>
+          <p class="endpoint-desc">Detailed security analysis with actionable recommendations</p>
+        </div>
+      </article>
+
+      <article class="doc-section">
+        <h2>Quick Start</h2>
+        <div class="quickstart-steps">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Clone Repository</h3>
+            <div class="code-block">
+<pre>git clone https://github.com/NicholasDarwin/SiteSentinel.git
+cd SiteSentinel</pre>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>Install Dependencies</h3>
+            <div class="code-block">
+<pre>npm install</pre>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>Configure Environment</h3>
+            <div class="code-block">
+<pre>cp .env.example .env
+# Edit .env with your settings</pre>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>Start Server</h3>
+            <div class="code-block">
+<pre>npm start</pre>
+            </div>
+          </div>
+        </div>
+        <p class="info-note">Full setup guide available in <code>QUICKSTART.md</code></p>
+      </article>
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to Integrate?</h2>
+      <p>Check out the full source code and examples on GitHub</p>
+      <a href="https://github.com/NicholasDarwin/SiteSentinel" target="_blank" class="cta-button">View Repository</a>
+    </section>
   </main>
 </body>
 </html>
