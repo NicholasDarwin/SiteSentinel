@@ -96,6 +96,17 @@ body {
   gap: 30px;
 }
 
+/* Top navigation tabs */
+.top-nav { display:flex; align-items:center; }
+.tabs { list-style:none; padding:0; margin:0; display:flex; gap:12px; }
+.tab { display:flex; align-items:center; gap:8px; padding:8px 12px; color:var(--text-primary); text-decoration:none; border-radius:6px; }
+.tab:hover { background: rgba(255,255,255,0.06); }
+.tab.active { background: rgba(255,255,255,0.08); font-weight:600; }
+.tab-icon { width:20px; height:20px; display:inline-block; }
+.brand-logo { width:36px; height:36px; margin-right:8px; }
+
+.feature-icon img { width:48px; height:48px; display:block; }
+
 .nav-link {
   text-decoration: none;
   color: var(--text-secondary);
