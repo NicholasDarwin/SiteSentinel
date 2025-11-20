@@ -107,6 +107,30 @@ body {
 
 .feature-icon img { width:48px; height:48px; display:block; }
 
+/* Page-specific styling to keep main page visuals unchanged */
+.page-features .feature-card img {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.04);
+  padding: 8px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+  object-fit: contain;
+}
+
+.page-features .feature-card h3 {
+  margin-top: 10px;
+}
+
+/* About page: slightly smaller brand logo to keep the header compact */
+.page-about .brand-logo {
+  width: 28px;
+  height: 28px;
+}
+
+/* About page: avoid large img styles interfering with any future images */
+.page-about img { max-width: 100%; height: auto; }
+
 .nav-link {
   text-decoration: none;
   color: var(--text-secondary);
