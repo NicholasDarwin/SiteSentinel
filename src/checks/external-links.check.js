@@ -124,6 +124,70 @@ class ExternalLinksCheck {
             }
           }
         }
+
+        // Attempt to extract obfuscated / encoded redirect targets
+        // 1. Base64 encoded strings that decode to a URL
+        const base64Regex = /['"]([A-Za-z0-9+/]{40,}={0,2})['"]/g; // reasonably long base64 candidates
+        let b64Match;
+        while ((b64Match = base64Regex.exec(scriptContent)) !== null) {
+          const candidate = b64Match[1];
+          try {
+            const decoded = Buffer.from(candidate, 'base64').toString('utf8');
+            if (/https?:\/\//.test(decoded)) {
+              // Extract any URLs inside the decoded payload
+              const decodedUrls = decoded.match(/https?:\/\/[^'"\s]+/g) || [];
+              decodedUrls.forEach(u => {
+                try {
+                  const absoluteUrl = new URL(u).href;
+                  const linkHostname = new URL(absoluteUrl).hostname;
+                  if (linkHostname !== hostname) {
+                    externalLinks.push(absoluteUrl);
+                  }
+                } catch(e) {}
+              });
+            }
+          } catch(e) {
+            // ignore malformed base64
+          }
+        }
+
+        // 2. Detect location assignments using atob() wrappers e.g. location.href = atob("...")
+        const atobPattern = /location\.(?:href|assign|replace)\s*=\s*atob\(['"]([A-Za-z0-9+/]{10,}={0,2})['"]\)/gi;
+        let atobMatch;
+        while ((atobMatch = atobPattern.exec(scriptContent)) !== null) {
+          const encoded = atobMatch[1];
+            try {
+              const decoded = Buffer.from(encoded, 'base64').toString('utf8').trim();
+              if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
+                const absoluteUrl = new URL(decoded).href;
+                const linkHostname = new URL(absoluteUrl).hostname;
+                if (linkHostname !== hostname) {
+                  externalLinks.push(absoluteUrl);
+                }
+              }
+            } catch(e) {}
+        }
+
+        // 3. Domain-only references later concatenated: find suspicious domain tokens near location.
+        // Heuristic: lines containing 'location' and a domain-like token without protocol.
+        const domainLines = scriptContent.split(/\n/).filter(l => /location\./.test(l));
+        const domainTokenRegex = /([a-zA-Z0-9-]{6,}\.(?:com|net|org|info|top|stream|click|download|loan|win|bid|racing))/g;
+        domainLines.forEach(line => {
+          let dm;
+          while ((dm = domainTokenRegex.exec(line)) !== null) {
+            const domainCandidate = dm[1];
+            // Try both https and http
+            ['https://', 'http://'].forEach(proto => {
+              try {
+                const absoluteUrl = new URL(proto + domainCandidate).href;
+                const linkHostname = new URL(absoluteUrl).hostname;
+                if (linkHostname !== hostname) {
+                  externalLinks.push(absoluteUrl);
+                }
+              } catch(e) {}
+            });
+          }
+        });
       }
 
       // Extract popup/modal links from data attributes
@@ -184,9 +248,16 @@ class ExternalLinksCheck {
       // Remove duplicates and merge with dynamic links
       const allLinks = [...externalLinks, ...dynamicLinks, ...redirectLinks];
       const uniqueExternalLinks = [...new Set(allLinks)];
+      // Remove clearly invalid placeholder hosts (e.g., 'undefined')
+      const cleanedExternalLinks = uniqueExternalLinks.filter(l => {
+        try {
+          const h = new URL(l).hostname;
+          return h && h !== 'undefined';
+        } catch { return false; }
+      });
 
       // Score each external link (limit to first 50 to avoid timeout)
-      const linksToScore = uniqueExternalLinks.slice(0, 50);
+      const linksToScore = cleanedExternalLinks.slice(0, 50);
       const scoredLinks = await Promise.all(
         linksToScore.map(async (link) => {
           const score = await this.scoreExternalLink(link);
@@ -200,7 +271,7 @@ class ExternalLinksCheck {
       );
 
       // Add remaining links without scoring if more than 50
-      const remainingLinks = uniqueExternalLinks.slice(50).map(link => ({
+      const remainingLinks = cleanedExternalLinks.slice(50).map(link => ({
         url: link,
         score: null,
         status: 'Not Scored',
@@ -209,10 +280,10 @@ class ExternalLinksCheck {
 
       checks.push({
         name: 'External Links Detected',
-        status: uniqueExternalLinks.length === 0 ? 'info' : 'pass',
-        description: uniqueExternalLinks.length === 0 
+        status: cleanedExternalLinks.length === 0 ? 'info' : 'pass',
+        description: cleanedExternalLinks.length === 0 
           ? 'No external links found on this page'
-          : `Found ${uniqueExternalLinks.length} unique external link${uniqueExternalLinks.length !== 1 ? 's' : ''}`,
+          : `Found ${cleanedExternalLinks.length} unique external link${cleanedExternalLinks.length !== 1 ? 's' : ''}`,
         severity: 'low'
       });
 
@@ -226,7 +297,7 @@ class ExternalLinksCheck {
       }
 
       // Check link diversity
-      const domains = uniqueExternalLinks.map(link => {
+      const domains = cleanedExternalLinks.map(link => {
         try {
           return new URL(link).hostname;
         } catch {
@@ -261,7 +332,7 @@ class ExternalLinksCheck {
         icon: '🌍',
         score: calculateCategoryScore(checks),
         checks,
-        externalLinks: uniqueExternalLinks,
+        externalLinks: cleanedExternalLinks,
         externalDomains: uniqueDomains,
         scoredLinks: allScoredLinks
       };
@@ -549,6 +620,13 @@ class ExternalLinksCheck {
             // Only click first 50 of each type to avoid too many interactions
             if (index < 50) {
               try {
+                // Simulate richer user interaction to trigger more handlers
+                ['pointerover','mouseover','mouseenter','focus'].forEach(evt => {
+                  try { el.dispatchEvent(new Event(evt, { bubbles: true })); } catch(e) {}
+                });
+                ['pointerdown','mousedown','click','mouseup','pointerup'].forEach(evt => {
+                  try { el.dispatchEvent(new Event(evt, { bubbles: true })); } catch(e) {}
+                });
                 el.click();
               } catch (e) {}
             }
@@ -556,8 +634,8 @@ class ExternalLinksCheck {
         });
       });
 
-      // Wait for potential scripted redirects after clicks
-      await page.waitForTimeout(2500);
+      // Wait for potential scripted redirects after clicks (extended to catch delayed timers)
+      await page.waitForTimeout(5000);
 
       // Extract links again after clicking
       const afterClickLinks = await page.evaluate((pageHostname) => {
