@@ -424,3 +424,8 @@ Future enhancements:
 **Made with ❤️ for cybersecurity professionals and web developers**
 
 SiteSentinel - Your Website's Security Sentinel
+
+## UI Updates
+- New "Brillance" inspired design
+- Serif typography for headings
+- Floating pill navigation
