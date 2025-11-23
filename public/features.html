@@ -5,25 +5,31 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SiteSentinel — Features</title>
   <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="page-features">
-  <nav class="navbar">
-    <div class="container">
+  <div class="nav-wrapper">
+    <nav class="navbar">
       <a href="index.html" class="navbar-brand">
-        <img src="assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
         <h1>SiteSentinel</h1>
       </a>
-      <div class="navbar-links top-nav">
-        <ul class="tabs">
-          <li><a href="index.html" class="tab"><img src="assets/icons/home.svg" class="tab-icon" alt="Home">Home</a></li>
-          <li><a href="features.html" class="tab active"><img src="assets/icons/features.svg" class="tab-icon" alt="Features">Features</a></li>
-          <li><a href="about.html" class="tab"><img src="assets/icons/about.svg" class="tab-icon" alt="About">About</a></li>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="features.html" class="nav-link active">Products</a></li>
+          <li><a href="about.html" class="nav-link">Pricing</a></li>
+          <li><a href="#" class="nav-link">Docs</a></li>
         </ul>
       </div>
-    </div>
-  </nav>
+      <div class="navbar-actions">
+        <a href="#" class="btn btn-nav">Log in</a>
+      </div>
+    </nav>
+  </div>
 
   <main class="page container">
     <header class="pro-hero">

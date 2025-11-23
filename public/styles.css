@@ -9,25 +9,28 @@
 }
 
 :root {
-  --primary-color: #1e40af;
-  --primary-light: #3b82f6;
-  --primary-dark: #1e3a8a;
+  --primary-color: #2d2d2d;
+  --primary-light: #4b4b4b;
+  --primary-dark: #1a1a1a;
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
   --info-color: #06b6d4;
-  --background: #f0f9ff;
+  --background: #fcfbf9;
   --surface: #ffffff;
   --surface-dark: #f3f4f6;
   --border-color: #e5e7eb;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
+  --text-primary: #2d2d2d;
+  --text-secondary: #525252;
   --text-light: #9ca3af;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-brand: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
 }
 
 html {
@@ -35,7 +38,7 @@ html {
 }
 
 body {
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--background);
   color: var(--text-primary);
   line-height: 1.6;
@@ -52,20 +55,27 @@ body {
    NAVIGATION BAR
    ───────────────────────────────────────────────────────────── */
 
-.navbar {
-  background-color: var(--surface);
-  box-shadow: var(--shadow-md);
+.nav-wrapper {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 3px solid var(--primary-color);
 }
 
-.navbar .container {
+.navbar {
+  background-color: var(--surface);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 50px;
+  padding: 8px 10px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  justify-content: space-between;
+  width: auto;
+  min-width: 600px;
+  max-width: 90%;
 }
 
 .navbar-brand {
@@ -76,27 +86,165 @@ body {
   transition: var(--transition);
   text-decoration: none;
   color: inherit;
+  padding-left: 15px;
 }
 
 .navbar-brand:hover {
-  transform: scale(1.02);
-}
-
-.navbar-brand .logo {
-  font-size: 2em;
+  opacity: 0.8;
 }
 
 .navbar-brand h1 {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  font-size: 1.5em;
-  font-weight: 700;
+  font-family: var(--font-brand); /* Keeping original font as requested */
+  font-size: 1.2em;
+  font-weight: 600;
   margin: 0;
-  color: var(--primary-color);
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
 }
 
 .navbar-links {
   display: flex;
-  gap: 30px;
+  align-items: center;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+  gap: 25px;
+  margin: 0;
+  padding: 0 20px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--text-primary);
+}
+
+.navbar-actions {
+  padding-right: 5px;
+}
+
+.btn-nav {
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.btn-nav:hover {
+  background-color: var(--surface-dark);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   HERO SECTION
+   ───────────────────────────────────────────────────────────── */
+
+.hero {
+  padding: 120px 0 80px;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero-content h2 {
+  font-family: var(--font-serif);
+  font-size: 4.5rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 30px;
+  letter-spacing: -1px;
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: 50px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.search-container {
+  max-width: 500px; /* Reduced width to match button style */
+  margin: 0 auto;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column; /* Stack on mobile, row on desktop if needed, but image shows just a button usually */
+  gap: 15px;
+  align-items: center;
+}
+
+/* If we want the input to be hidden or styled differently */
+.url-input {
+  display: none; /* Hiding input initially to match image exactly, or we can style it */
+}
+
+/* Wait, the user wants the functionality to remain. The image has a "Start for free" button. 
+   I should probably keep the input but style it to look good, or make the button open a modal.
+   For now, I'll style the input to be subtle or just keep the button prominent.
+   Actually, let's make the input visible but clean.
+*/
+
+.url-input {
+  display: block;
+  width: 100%;
+  padding: 15px 25px;
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition);
+  background: white;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.url-input:focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-sans);
+}
+
+.btn-primary:hover {
+  background-color: black;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.input-hint {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: var(--text-light);
 }
 
 /* Top navigation tabs */
@@ -113,24 +261,29 @@ body {
 /* Page-specific styling to keep main page visuals unchanged */
 
 /* Professional hero section */
-.page-features .pro-hero {
+.pro-hero {
   text-align: center;
-  padding: 60px 20px 40px;
-  max-width: 800px;
+  padding: 80px 20px 60px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-.page-features .pro-hero h1 {
-  font-size: 2.5em;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--primary-color);
+.pro-hero h1 {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 400;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  line-height: 1.2;
 }
 
-.page-features .pro-hero .lead {
-  font-size: 1.2em;
+.pro-hero .lead {
+  font-size: 1.25rem;
   color: var(--text-secondary);
   line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 /* Features showcase grid */
