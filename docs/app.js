@@ -200,7 +200,6 @@ class SiteSentinelApp {
     
     card.innerHTML = `
       <div class="category-card-header">
-        <div class="category-icon">${category.icon || '❓'}</div>
         <div class="category-title">
           <h3>${category.category || 'Unknown'}</h3>
           <div class="category-score">${checks.length} checks</div>
@@ -385,7 +384,7 @@ Overall Score: ${data.overall.score}/100 (${data.overall.label})
 `;
 
     data.categories.forEach(category => {
-      report += `\n${category.icon} ${category.category} - ${category.score}/100\n`;
+      report += `\n${category.category} - ${category.score}/100\n`;
       report += '─'.repeat(60) + '\n\n';
       
       category.checks.forEach(check => {
