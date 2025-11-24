@@ -21,7 +21,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Static files
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../docs')));
 
 // Request logging
 app.use((req, res, next) => {
@@ -39,7 +39,7 @@ app.use('/api/ai', require('./routes/ai.route'));
 
 // Root route - serve index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, '../docs/index.html'));
 });
 
 // Health check
