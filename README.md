@@ -1,10 +1,10 @@
-# 🔐 SiteSentinel - Comprehensive Website Security Analysis Tool
+# SiteSentinel - Comprehensive Website Security Analysis Tool
 
 A powerful, open-source web application that performs comprehensive security, performance, SEO, and best practices analysis on any public website. Perfect for your personal website or resume portfolio to demonstrate cybersecurity expertise.
 
 ## Features
 
-### 📊 50+ Security & Web Analysis Checks
+### 50+ Security & Web Analysis Checks
 
 SiteSentinel performs comprehensive checks across six major categories:
 
@@ -61,17 +61,17 @@ SiteSentinel performs comprehensive checks across six major categories:
    - Safe browsing verification
    - Security misconfiguration detection
 
-### 🎨 Beautiful, Responsive Interface
+### Beautiful, Responsive Interface
 
 - Modern, professional UI with gradient headers
 - Real-time analysis progress
-- Color-coded status indicators (✅ Pass, ⚠️ Warning, ❌ Fail)
+- Color-coded status indicators (Pass, Warning, Fail)
 - Collapsible category sections for easy navigation
 - Overall security score (0-100)
 - Statistics dashboard
 - Export report functionality
 
-### ⚡ Safe & Legal
+### Safe & Legal
 
 - **No hacking or unauthorized access**
 - Uses only public APIs and safe HTTP/HTTPS requests
@@ -197,10 +197,10 @@ The overall security score is calculated based on:
 - **Fail**: 0 points
 
 **Score Ratings:**
-- 80-100: 🟢 Excellent security posture
-- 60-79: 🔵 Good security with some improvements needed
-- 40-59: 🟡 Fair security with multiple issues
-- 0-39: 🔴 Poor security requiring immediate attention
+- 80-100: Excellent security posture
+- 60-79: Good security with some improvements needed
+- 40-59: Fair security with multiple issues
+- 0-39: Poor security requiring immediate attention
 
 ## Check Categories Detailed
 
@@ -298,17 +298,17 @@ The overall security score is calculated based on:
 
 ### For Each Check Type:
 
-**🟢 PASS - No Action Needed**
+**PASS - No Action Needed**
 - All best practices are followed
 - Security is properly configured
 - Performance is optimized
 
-**🟡 WARNING - Consider Improvement**
+**WARNING - Consider Improvement**
 - Non-critical issues found
 - Recommended improvements available
 - Follow suggestions for optimization
 
-**🔴 FAIL - Immediate Action Required**
+**FAIL - Immediate Action Required**
 - Critical security/functionality issues
 - Must address before production
 - Follow detailed recommendations
@@ -421,6 +421,6 @@ Future enhancements:
 
 ---
 
-**Made with ❤️ for cybersecurity professionals and web developers**
+**Made for cybersecurity professionals and web developers**
 
 SiteSentinel - Your Website's Security Sentinel
