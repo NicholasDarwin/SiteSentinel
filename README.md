@@ -129,14 +129,14 @@ npm run dev
 
 ```
 Sitesentinel/
-├── package.json           # Node.js dependencies
-├── server.js              # Express server setup
-├── analyzer.js            # Core analysis engine (50+ checks)
-├── public/
-│   ├── index.html         # Main interface
-│   ├── styles.css         # Styling and responsive design
-│   └── app.js             # Frontend logic
-└── README.md              # This file
+package.json           # Node.js dependencies
+server.js              # Express server setup
+analyzer.js            # Core analysis engine (50+ checks)
+public/
+  index.html         # Main interface
+  styles.css         # Styling and responsive design
+  app.js             # Frontend logic
+README.md              # This file
 ```
 
 ## API Endpoints
