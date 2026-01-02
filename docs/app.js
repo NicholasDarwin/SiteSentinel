@@ -16,6 +16,7 @@ const IMPORTANT_CHECKS = new Set([
   'TLS Protocol Version',
   'XSS (Cross-Site Scripting) Protection',
   'External Scripts',
+  'Clickjacking Protection',
   
   // Important DNS/Domain
   'DNS Resolution',
@@ -44,6 +45,9 @@ const CHECK_DETAIL_PAGES = {
   'Form Security': 'safety/form-security.html',
   'XSS (Cross-Site Scripting) Protection': 'safety/xss-protection.html',
   'External Scripts': 'safety/external-scripts.html',
+  'Clickjacking Protection': 'safety/iframe-usage.html',
+  'Mixed Content': 'safety/ssl-certificate.html',
+  'Iframe Usage': 'safety/iframe-usage.html',
   
   // Security & HTTPS checks (Critical/High)
   'HTTPS Encryption': 'agents/security-agent.html',
