@@ -2,87 +2,72 @@
 // SiteSentinel - Frontend Application
 // ─────────────────────────────────────────────────────────────
 
+// Important checks that get a "Learn More" button (critical/high severity)
+const IMPORTANT_CHECKS = new Set([
+  // Critical Security
+  'HTTPS Encryption',
+  'SSL Certificate Status',
+  'Malware/Phishing Indicators',
+  'Redirect Scam Detection',
+  'Form Security',
+  
+  // High Priority Security
+  'Content Security Policy (CSP)',
+  'TLS Protocol Version',
+  'XSS (Cross-Site Scripting) Protection',
+  'External Scripts',
+  
+  // Important DNS/Domain
+  'DNS Resolution',
+  'SPF Record (Email Security)',
+  'DMARC Record (Email Auth)',
+  
+  // Key Performance
+  'Page Load Time',
+  
+  // Essential SEO
+  'Page Title',
+  'Meta Description',
+  'Mobile Viewport',
+  
+  // Core Accessibility  
+  'Page Language Declaration',
+  'Image Alt Text',
+  'Form Input Labels'
+]);
+
 // Mapping of check names to their detail page URLs
 const CHECK_DETAIL_PAGES = {
-  // Safety & Threats checks
+  // Safety & Threats checks (Critical)
   'Malware/Phishing Indicators': 'safety/malware-phishing.html',
   'SSL Certificate Status': 'safety/ssl-certificate.html',
   'Form Security': 'safety/form-security.html',
-  'Outdated Software Detection': 'safety/outdated-software.html',
-  'SQL Injection Protection': 'safety/sql-injection.html',
   'XSS (Cross-Site Scripting) Protection': 'safety/xss-protection.html',
-  'Iframe Usage': 'safety/iframe-usage.html',
   'External Scripts': 'safety/external-scripts.html',
-  'Rate Limiting / Bot Protection': 'safety/rate-limiting.html',
-  'Domain Registrar Status': 'safety/domain-registrar.html',
   
-  // Security & HTTPS checks
+  // Security & HTTPS checks (Critical/High)
   'HTTPS Encryption': 'agents/security-agent.html',
-  'HSTS Header': 'agents/security-agent.html',
   'Content Security Policy (CSP)': 'agents/security-agent.html',
-  'X-Frame-Options Header': 'agents/security-agent.html',
-  'X-Content-Type-Options': 'agents/security-agent.html',
-  'Referrer-Policy': 'agents/security-agent.html',
-  'Permissions-Policy': 'agents/security-agent.html',
   'TLS Protocol Version': 'agents/security-agent.html',
   'Redirect Scam Detection': 'agents/security-agent.html',
   
-  // DNS & Domain checks
+  // DNS & Domain checks (Important)
   'DNS Resolution': 'agents/dns-agent.html',
-  'IPv6 Support': 'agents/dns-agent.html',
-  'MX Records (Email)': 'agents/dns-agent.html',
   'SPF Record (Email Security)': 'agents/dns-agent.html',
   'DMARC Record (Email Auth)': 'agents/dns-agent.html',
-  'DNSSEC': 'agents/dns-agent.html',
   
   // Performance checks
   'Page Load Time': 'agents/performance-agent.html',
-  'HTTP Version': 'agents/performance-agent.html',
-  'Content Compression': 'agents/performance-agent.html',
-  'Browser Caching': 'agents/performance-agent.html',
-  'CDN/Performance Optimization': 'agents/performance-agent.html',
-  'Response Size': 'agents/performance-agent.html',
-  'Redirect Efficiency': 'agents/performance-agent.html',
   
   // SEO & Metadata checks
   'Page Title': 'agents/seo-agent.html',
   'Meta Description': 'agents/seo-agent.html',
-  'H1 Tag Structure': 'agents/seo-agent.html',
-  'Robots Meta Tag': 'agents/seo-agent.html',
-  'Canonical Tag': 'agents/seo-agent.html',
-  'Open Graph Tags': 'agents/seo-agent.html',
-  'Structured Data (Schema.org)': 'agents/seo-agent.html',
   'Mobile Viewport': 'agents/seo-agent.html',
-  'Image Alt Attributes': 'agents/seo-agent.html',
-  'Favicon': 'agents/seo-agent.html',
-  'Deep Link Discovery': 'agents/seo-agent.html',
   
   // Accessibility checks
   'Page Language Declaration': 'agents/accessibility-agent.html',
   'Image Alt Text': 'agents/accessibility-agent.html',
-  'Form Input Labels': 'agents/accessibility-agent.html',
-  'Heading Hierarchy (H1-H6)': 'agents/accessibility-agent.html',
-  'Color Contrast Ratio': 'agents/accessibility-agent.html',
-  'Keyboard Navigation': 'agents/accessibility-agent.html',
-  'ARIA Labels & Roles': 'agents/accessibility-agent.html',
-  'Skip to Main Content Link': 'agents/accessibility-agent.html',
-  'Link Text Quality': 'agents/accessibility-agent.html',
-  'Text Readability': 'agents/accessibility-agent.html',
-  
-  // External Links checks
-  'External Links Found': 'agents/external-links-agent.html',
-  'Redirect Links': 'agents/external-links-agent.html',
-  'Suspicious External Redirects': 'agents/external-links-agent.html',
-  'External Link Density': 'agents/external-links-agent.html',
-  'External Links Detected': 'agents/external-links-agent.html',
-  'External Domains': 'agents/external-links-agent.html',
-  
-  // WHOIS checks
-  'Domain Registration': 'agents/whois-agent.html',
-  'Registrar': 'agents/whois-agent.html',
-  'Domain Age': 'agents/whois-agent.html',
-  'Domain Expiration': 'agents/whois-agent.html',
-  'Name Servers': 'agents/whois-agent.html'
+  'Form Input Labels': 'agents/accessibility-agent.html'
 };
 
 class SiteSentinelApp {
@@ -275,7 +260,20 @@ class SiteSentinelApp {
     card.className = 'category-card';
     
     const scoreColor = this.getScoreColor(category.score);
-    const checks = category.checks || [];
+    let checks = category.checks || [];
+    
+    // Sort checks: important (critical/high) first, then by status (fail > warn > info > pass)
+    const statusOrder = { fail: 0, error: 0, warn: 1, info: 2, pass: 3 };
+    checks = [...checks].sort((a, b) => {
+      const aImportant = IMPORTANT_CHECKS.has(a.name) ? 0 : 1;
+      const bImportant = IMPORTANT_CHECKS.has(b.name) ? 0 : 1;
+      if (aImportant !== bImportant) return aImportant - bImportant;
+      return (statusOrder[a.status] || 3) - (statusOrder[b.status] || 3);
+    });
+    
+    // Separate important and other checks
+    const importantChecks = checks.filter(c => IMPORTANT_CHECKS.has(c.name));
+    const otherChecks = checks.filter(c => !IMPORTANT_CHECKS.has(c.name));
     
     // Check if this is External Links category
     const isExternalLinks = category.category === 'External Links';
@@ -285,16 +283,31 @@ class SiteSentinelApp {
       <div class="category-card-header">
         <div class="category-title">
           <h3>${category.category || 'Unknown'}</h3>
-          <div class="category-score">${checks.length} checks</div>
+          <div class="category-score">${importantChecks.length} key checks · ${otherChecks.length} additional</div>
         </div>
         <div class="category-badge" style="background: ${scoreColor}">
           ${category.score}/100
         </div>
       </div>
       <div class="category-body">
-        <ul class="check-list">
-          ${category.checks.map(check => this.createCheckItem(check)).join('')}
-        </ul>
+        ${importantChecks.length > 0 ? `
+          <div class="checks-section important-checks">
+            <div class="section-label">🔑 Key Checks</div>
+            <ul class="check-list">
+              ${importantChecks.map(check => this.createCheckItem(check, true)).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        ${otherChecks.length > 0 ? `
+          <div class="checks-section other-checks ${importantChecks.length > 0 ? 'collapsed' : ''}">
+            <div class="section-label section-label-toggle" onclick="this.parentElement.classList.toggle('collapsed')">
+              📋 Additional Checks <span class="toggle-icon">▼</span>
+            </div>
+            <ul class="check-list">
+              ${otherChecks.map(check => this.createCheckItem(check, false)).join('')}
+            </ul>
+          </div>
+        ` : ''}
         ${hasExternalLinks ? this.createExternalLinksSection(category.scoredLinks) : ''}
       </div>
     `;
@@ -363,25 +376,40 @@ class SiteSentinelApp {
     }
   }
 
-  createCheckItem(check) {
+  createCheckItem(check, isImportant = false) {
     const statusIcon = this.getStatusIcon(check.status);
     const detailPage = CHECK_DETAIL_PAGES[check.name];
     const hasDetailPage = !!detailPage;
+    const showLearnMore = isImportant && hasDetailPage;
     
-    if (hasDetailPage) {
+    // Store check data for the detail page
+    const checkData = encodeURIComponent(JSON.stringify({
+      name: check.name,
+      status: check.status,
+      description: check.description,
+      url: this.analysisData?.url || ''
+    }));
+    
+    if (showLearnMore) {
       return `
-        <li class="check-item check-item-clickable" onclick="window.location.href='${detailPage}'" title="Click to learn more about this check">
+        <li class="check-item check-item-important">
           <div class="check-icon">${statusIcon}</div>
           <div class="check-details">
-            <div class="check-name">${check.name} <span class="check-arrow">→</span></div>
+            <div class="check-name-row">
+              <span class="check-name">${check.name}</span>
+              <span class="importance-badge">Important</span>
+            </div>
             <div class="check-description">${check.description}</div>
+            <a href="${detailPage}?data=${checkData}" class="learn-more-btn" onclick="event.stopPropagation();">
+              Learn More →
+            </a>
           </div>
         </li>
       `;
     }
     
     return `
-      <li class="check-item">
+      <li class="check-item ${hasDetailPage ? 'check-item-clickable' : ''}" ${hasDetailPage ? `onclick="window.location.href='${detailPage}'"` : ''}>
         <div class="check-icon">${statusIcon}</div>
         <div class="check-details">
           <div class="check-name">${check.name}</div>
