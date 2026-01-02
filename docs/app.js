@@ -2,6 +2,89 @@
 // SiteSentinel - Frontend Application
 // ─────────────────────────────────────────────────────────────
 
+// Mapping of check names to their detail page URLs
+const CHECK_DETAIL_PAGES = {
+  // Safety & Threats checks
+  'Malware/Phishing Indicators': 'safety/malware-phishing.html',
+  'SSL Certificate Status': 'safety/ssl-certificate.html',
+  'Form Security': 'safety/form-security.html',
+  'Outdated Software Detection': 'safety/outdated-software.html',
+  'SQL Injection Protection': 'safety/sql-injection.html',
+  'XSS (Cross-Site Scripting) Protection': 'safety/xss-protection.html',
+  'Iframe Usage': 'safety/iframe-usage.html',
+  'External Scripts': 'safety/external-scripts.html',
+  'Rate Limiting / Bot Protection': 'safety/rate-limiting.html',
+  'Domain Registrar Status': 'safety/domain-registrar.html',
+  
+  // Security & HTTPS checks
+  'HTTPS Encryption': 'agents/security-agent.html',
+  'HSTS Header': 'agents/security-agent.html',
+  'Content Security Policy (CSP)': 'agents/security-agent.html',
+  'X-Frame-Options Header': 'agents/security-agent.html',
+  'X-Content-Type-Options': 'agents/security-agent.html',
+  'Referrer-Policy': 'agents/security-agent.html',
+  'Permissions-Policy': 'agents/security-agent.html',
+  'TLS Protocol Version': 'agents/security-agent.html',
+  'Redirect Scam Detection': 'agents/security-agent.html',
+  
+  // DNS & Domain checks
+  'DNS Resolution': 'agents/dns-agent.html',
+  'IPv6 Support': 'agents/dns-agent.html',
+  'MX Records (Email)': 'agents/dns-agent.html',
+  'SPF Record (Email Security)': 'agents/dns-agent.html',
+  'DMARC Record (Email Auth)': 'agents/dns-agent.html',
+  'DNSSEC': 'agents/dns-agent.html',
+  
+  // Performance checks
+  'Page Load Time': 'agents/performance-agent.html',
+  'HTTP Version': 'agents/performance-agent.html',
+  'Content Compression': 'agents/performance-agent.html',
+  'Browser Caching': 'agents/performance-agent.html',
+  'CDN/Performance Optimization': 'agents/performance-agent.html',
+  'Response Size': 'agents/performance-agent.html',
+  'Redirect Efficiency': 'agents/performance-agent.html',
+  
+  // SEO & Metadata checks
+  'Page Title': 'agents/seo-agent.html',
+  'Meta Description': 'agents/seo-agent.html',
+  'H1 Tag Structure': 'agents/seo-agent.html',
+  'Robots Meta Tag': 'agents/seo-agent.html',
+  'Canonical Tag': 'agents/seo-agent.html',
+  'Open Graph Tags': 'agents/seo-agent.html',
+  'Structured Data (Schema.org)': 'agents/seo-agent.html',
+  'Mobile Viewport': 'agents/seo-agent.html',
+  'Image Alt Attributes': 'agents/seo-agent.html',
+  'Favicon': 'agents/seo-agent.html',
+  'Deep Link Discovery': 'agents/seo-agent.html',
+  
+  // Accessibility checks
+  'Page Language Declaration': 'agents/accessibility-agent.html',
+  'Image Alt Text': 'agents/accessibility-agent.html',
+  'Form Input Labels': 'agents/accessibility-agent.html',
+  'Heading Hierarchy (H1-H6)': 'agents/accessibility-agent.html',
+  'Color Contrast Ratio': 'agents/accessibility-agent.html',
+  'Keyboard Navigation': 'agents/accessibility-agent.html',
+  'ARIA Labels & Roles': 'agents/accessibility-agent.html',
+  'Skip to Main Content Link': 'agents/accessibility-agent.html',
+  'Link Text Quality': 'agents/accessibility-agent.html',
+  'Text Readability': 'agents/accessibility-agent.html',
+  
+  // External Links checks
+  'External Links Found': 'agents/external-links-agent.html',
+  'Redirect Links': 'agents/external-links-agent.html',
+  'Suspicious External Redirects': 'agents/external-links-agent.html',
+  'External Link Density': 'agents/external-links-agent.html',
+  'External Links Detected': 'agents/external-links-agent.html',
+  'External Domains': 'agents/external-links-agent.html',
+  
+  // WHOIS checks
+  'Domain Registration': 'agents/whois-agent.html',
+  'Registrar': 'agents/whois-agent.html',
+  'Domain Age': 'agents/whois-agent.html',
+  'Domain Expiration': 'agents/whois-agent.html',
+  'Name Servers': 'agents/whois-agent.html'
+};
+
 class SiteSentinelApp {
   constructor() {
     this.form = document.getElementById('analysisForm');
@@ -282,6 +365,21 @@ class SiteSentinelApp {
 
   createCheckItem(check) {
     const statusIcon = this.getStatusIcon(check.status);
+    const detailPage = CHECK_DETAIL_PAGES[check.name];
+    const hasDetailPage = !!detailPage;
+    
+    if (hasDetailPage) {
+      return `
+        <li class="check-item check-item-clickable" onclick="window.location.href='${detailPage}'" title="Click to learn more about this check">
+          <div class="check-icon">${statusIcon}</div>
+          <div class="check-details">
+            <div class="check-name">${check.name} <span class="check-arrow">→</span></div>
+            <div class="check-description">${check.description}</div>
+          </div>
+        </li>
+      `;
+    }
+    
     return `
       <li class="check-item">
         <div class="check-icon">${statusIcon}</div>
