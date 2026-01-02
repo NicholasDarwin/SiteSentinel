@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">⚡</div>
+      <div>
+        <h1>Performance Agent</h1>
+        <span class="agent-file-badge">performance.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The Performance Agent measures website speed and optimization, including response times, page size, compression, caching, and resource optimization.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>Performance</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>⚡</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/performance.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Checks Performed</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Response Time</h4>
+          <p>Time to First Byte (TTFB) - how quickly the server responds to requests.</p>
+        </div>
+        <div class="info-card">
+          <h4>Page Size</h4>
+          <p>Total size of HTML response. Large pages slow down loading.</p>
+        </div>
+        <div class="info-card">
+          <h4>Gzip/Brotli Compression</h4>
+          <p>Checks if content is compressed to reduce transfer size.</p>
+        </div>
+        <div class="info-card">
+          <h4>Cache Headers</h4>
+          <p>Validates Cache-Control and ETag headers for browser caching.</p>
+        </div>
+        <div class="info-card">
+          <h4>Keep-Alive</h4>
+          <p>Checks if persistent connections are enabled.</p>
+        </div>
+        <div class="info-card">
+          <h4>Resource Count</h4>
+          <p>Number of scripts, stylesheets, and images loaded.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>axios</code> — HTTP client with timing information</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>📥 Data Points Collected</h4>
+        <pre><code>const startTime = Date.now();
+const response = await axios.get(url, { timeout: 15000 });
+const responseTime = Date.now() - startTime;
+
+// From headers
+const contentLength = response.headers['content-length'];
+const contentEncoding = response.headers['content-encoding'];
+const cacheControl = response.headers['cache-control'];
+
+// From response
+const htmlSize = response.data.length;</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Performance Thresholds</h2>
+      <table class="info-table">
+        <tr>
+          <th>Metric</th>
+          <th>Good</th>
+          <th>Warning</th>
+          <th>Poor</th>
+        </tr>
+        <tr>
+          <td>Response Time</td>
+          <td>&lt; 500ms</td>
+          <td>500ms - 2s</td>
+          <td>&gt; 2s</td>
+        </tr>
+        <tr>
+          <td>Page Size</td>
+          <td>&lt; 500KB</td>
+          <td>500KB - 2MB</td>
+          <td>&gt; 2MB</td>
+        </tr>
+        <tr>
+          <td>Compression</td>
+          <td>Enabled</td>
+          <td>-</td>
+          <td>Disabled</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'Performance',
+  icon: '⚡',
+  score: 0-100,
+  checks: [
+    {
+      name: 'Response Time',
+      status: 'pass',
+      description: 'Server responded in 234ms',
+      severity: 'high'
+    },
+    {
+      name: 'Gzip Compression',
+      status: 'pass' | 'fail',
+      description: 'Content is gzip compressed',
+      severity: 'medium'
+    },
+    // ... more checks
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

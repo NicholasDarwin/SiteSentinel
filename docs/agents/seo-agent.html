@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">📈</div>
+      <div>
+        <h1>SEO Agent</h1>
+        <span class="agent-file-badge">seo.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The SEO Agent audits search engine optimization factors including meta tags, heading structure, structured data, Open Graph tags, and content quality indicators.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>SEO & Metadata</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>📈</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/seo.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Checks Performed</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Title Tag</h4>
+          <p>Validates presence and length (50-60 characters optimal).</p>
+        </div>
+        <div class="info-card">
+          <h4>Meta Description</h4>
+          <p>Checks for description meta tag (150-160 characters optimal).</p>
+        </div>
+        <div class="info-card">
+          <h4>Heading Structure</h4>
+          <p>Validates H1 presence and proper heading hierarchy.</p>
+        </div>
+        <div class="info-card">
+          <h4>Canonical URL</h4>
+          <p>Checks for canonical link to prevent duplicate content.</p>
+        </div>
+        <div class="info-card">
+          <h4>Open Graph Tags</h4>
+          <p>Validates og:title, og:description, og:image for social sharing.</p>
+        </div>
+        <div class="info-card">
+          <h4>Twitter Cards</h4>
+          <p>Checks for twitter:card and related meta tags.</p>
+        </div>
+        <div class="info-card">
+          <h4>Structured Data</h4>
+          <p>Detects JSON-LD or microdata for rich search results.</p>
+        </div>
+        <div class="info-card">
+          <h4>Robots Meta</h4>
+          <p>Checks robots meta tag and X-Robots-Tag header.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>axios</code> — HTTP client for fetching the page</li>
+          <li><code>cheerio</code> — jQuery-like HTML parsing</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 HTML Parsing</h4>
+        <pre><code>const cheerio = require('cheerio');
+const response = await axios.get(url);
+const $ = cheerio.load(response.data);
+
+// Extract meta tags
+const title = $('title').text();
+const description = $('meta[name="description"]').attr('content');
+const canonical = $('link[rel="canonical"]').attr('href');
+
+// Open Graph
+const ogTitle = $('meta[property="og:title"]').attr('content');
+const ogImage = $('meta[property="og:image"]').attr('content');
+
+// Headings
+const h1Count = $('h1').length;
+const headings = $('h1, h2, h3, h4, h5, h6').toArray();</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>SEO Best Practices</h2>
+      <table class="info-table">
+        <tr>
+          <th>Element</th>
+          <th>Recommendation</th>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>50-60 characters, unique, contains primary keyword</td>
+        </tr>
+        <tr>
+          <td>Meta Description</td>
+          <td>150-160 characters, compelling, contains keywords</td>
+        </tr>
+        <tr>
+          <td>H1</td>
+          <td>Exactly one per page, unique, descriptive</td>
+        </tr>
+        <tr>
+          <td>Canonical</td>
+          <td>Points to the preferred URL version</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'SEO & Metadata',
+  icon: '📈',
+  score: 0-100,
+  checks: [
+    {
+      name: 'Title Tag',
+      status: 'pass',
+      description: 'Title present: "Your Page Title" (52 chars)',
+      severity: 'high'
+    },
+    {
+      name: 'Meta Description',
+      status: 'pass' | 'fail' | 'warn',
+      description: 'Description present and optimal length',
+      severity: 'high'
+    },
+    // ... more checks
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

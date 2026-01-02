@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SiteSentinel — Analysis Agents</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-agents">
+  <!-- Navigation -->
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="index.html" class="navbar-brand">
+        <img src="assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="safety.html" class="nav-link">Safety</a></li>
+          <li><a href="agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <header class="pro-hero">
+      <h1>🤖 Analysis Agents</h1>
+      <p class="lead">SiteSentinel uses specialized agents to analyze different aspects of website security and quality. Click any agent to learn how it works internally.</p>
+    </header>
+
+    <section class="agents-grid">
+      <!-- Safety Agent -->
+      <a href="agents/safety-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">⚠️</div>
+        <div class="agent-card-content">
+          <h3>Safety & Threats Agent</h3>
+          <p>Analyzes malware, phishing, SSL certificates, form security, iframes, external scripts, and domain reputation.</p>
+          <div class="agent-meta">
+            <span class="agent-file">safety.check.js</span>
+            <span class="agent-checks">10 checks</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- Security Agent -->
+      <a href="agents/security-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">🔐</div>
+        <div class="agent-card-content">
+          <h3>Security Headers Agent</h3>
+          <p>Examines HTTP security headers including CSP, HSTS, X-Frame-Options, X-Content-Type-Options, and more.</p>
+          <div class="agent-meta">
+            <span class="agent-file">security.check.js</span>
+            <span class="agent-checks">Multiple checks</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- DNS Agent -->
+      <a href="agents/dns-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">🌍</div>
+        <div class="agent-card-content">
+          <h3>DNS & Domain Agent</h3>
+          <p>Validates DNS records, MX configuration, SPF, DKIM, DMARC, and email security settings.</p>
+          <div class="agent-meta">
+            <span class="agent-file">dns.check.js</span>
+            <span class="agent-checks">Multiple checks</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- Performance Agent -->
+      <a href="agents/performance-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">⚡</div>
+        <div class="agent-card-content">
+          <h3>Performance Agent</h3>
+          <p>Measures load times, response sizes, compression, caching headers, and optimization opportunities.</p>
+          <div class="agent-meta">
+            <span class="agent-file">performance.check.js</span>
+            <span class="agent-checks">Multiple checks</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- SEO Agent -->
+      <a href="agents/seo-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">📈</div>
+        <div class="agent-card-content">
+          <h3>SEO Agent</h3>
+          <p>Audits meta tags, headings, structured data, Open Graph, canonical URLs, and search engine optimization.</p>
+          <div class="agent-meta">
+            <span class="agent-file">seo.check.js</span>
+            <span class="agent-checks">Multiple checks</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- Accessibility Agent -->
+      <a href="agents/accessibility-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">♿</div>
+        <div class="agent-card-content">
+          <h3>Accessibility Agent</h3>
+          <p>Evaluates WCAG 2.1 compliance, alt text, form labels, ARIA attributes, color contrast, and keyboard navigation.</p>
+          <div class="agent-meta">
+            <span class="agent-file">accessibility.check.js</span>
+            <span class="agent-checks">Multiple checks</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- External Links Agent -->
+      <a href="agents/external-links-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">🔗</div>
+        <div class="agent-card-content">
+          <h3>External Links Agent</h3>
+          <p>Discovers and validates external links, checks for broken links, and analyzes link safety scores.</p>
+          <div class="agent-meta">
+            <span class="agent-file">external-links.check.js</span>
+            <span class="agent-checks">Link analysis</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+
+      <!-- WHOIS Agent -->
+      <a href="agents/whois-agent.html" class="agent-card agent-card-clickable">
+        <div class="agent-card-icon">📋</div>
+        <div class="agent-card-content">
+          <h3>WHOIS Agent</h3>
+          <p>Retrieves domain registration data including registrar, creation date, expiration, and nameservers.</p>
+          <div class="agent-meta">
+            <span class="agent-file">whois.check.js</span>
+            <span class="agent-checks">Domain info</span>
+          </div>
+        </div>
+        <div class="agent-card-arrow">→</div>
+      </a>
+    </section>
+
+    <section class="info-section">
+      <h2>How Agents Work Together</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>🔄 Parallel Execution</h4>
+          <p>When you submit a URL for analysis, all agents run in parallel using <code>Promise.all()</code> to minimize total analysis time while gathering comprehensive data.</p>
+        </div>
+        <div class="info-card">
+          <h4>📊 Score Aggregation</h4>
+          <p>Each agent returns a category score (0-100). The overall score is calculated as a weighted average across all categories using <code>score-calculator.util.js</code>.</p>
+        </div>
+        <div class="info-card">
+          <h4>🔌 API Integration</h4>
+          <p>Agents can integrate with external APIs like Google Safe Browsing, DNS resolvers, and WHOIS services when API keys are configured via environment variables.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

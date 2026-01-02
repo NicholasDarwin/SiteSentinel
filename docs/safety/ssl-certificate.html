@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSL Certificate Status — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-check-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
+    
+    <header class="check-detail-header">
+      <div class="check-icon-large critical">🔒</div>
+      <div>
+        <h1>SSL Certificate Status</h1>
+        <span class="severity-badge critical">Critical Severity</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Check Measures</h2>
+      <p>This check verifies whether the website uses <strong>HTTPS</strong> (HTTP Secure) encryption, which indicates that an SSL/TLS certificate is active and the connection between the user and server is encrypted.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Why It Matters</h2>
+      <ul>
+        <li><strong>Data Privacy</strong> — HTTPS encrypts all data transmitted between the browser and server</li>
+        <li><strong>Authentication</strong> — SSL certificates verify the website's identity</li>
+        <li><strong>Integrity</strong> — Prevents man-in-the-middle attacks and data tampering</li>
+        <li><strong>SEO Impact</strong> — Google ranks HTTPS sites higher in search results</li>
+        <li><strong>Browser Trust</strong> — Modern browsers show "Not Secure" warnings for HTTP sites</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>How Data Is Obtained</h2>
+      
+      <div class="code-reference">
+        <h4>📁 Source File</h4>
+        <code>src/checks/safety.check.js</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔧 Function</h4>
+        <code>SafetyCheck.analyze(url)</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>📥 Input</h4>
+        <p>The full URL string passed to the analyzer</p>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Detection Logic</h4>
+        <pre><code>// Simple URL protocol check
+checks.push({
+  name: 'SSL Certificate Status',
+  status: url.startsWith('https://') ? 'pass' : 'fail',
+  description: url.startsWith('https://') 
+    ? 'HTTPS connection established' 
+    : 'No HTTPS - unencrypted connection',
+  severity: 'critical'
+});</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4>📚 Libraries</h4>
+        <p>No external libraries required — uses native JavaScript string methods</p>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Status Values</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Condition</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-pass">
+          <td><span class="status-icon">✅</span> pass</td>
+          <td>URL starts with <code>https://</code></td>
+          <td>HTTPS is enabled. Data is encrypted in transit.</td>
+        </tr>
+        <tr class="status-fail">
+          <td><span class="status-icon">❌</span> fail</td>
+          <td>URL starts with <code>http://</code></td>
+          <td>No encryption. All data sent in plain text. Critical security risk.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Severity: Critical</h2>
+      <p>This check has <strong>critical</strong> severity because:</p>
+      <ul>
+        <li>HTTP connections expose all traffic to eavesdropping</li>
+        <li>Passwords, credit cards, and personal data can be intercepted</li>
+        <li>Users may unknowingly submit sensitive information over insecure connections</li>
+        <li>Modern browsers actively warn users about non-HTTPS sites</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Impact on Category Score</h2>
+      <p>As a <strong>critical</strong> severity check:</p>
+      <ul>
+        <li>A <code>pass</code> contributes positively to the Safety & Threats score</li>
+        <li>A <code>fail</code> significantly reduces the category score</li>
+        <li>The <code>calculateCategoryScore()</code> function weights critical checks heavily</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Limitations</h2>
+      <div class="warning-box">
+        <h4>⚠️ What This Check Does NOT Verify</h4>
+        <ul>
+          <li>Certificate validity (expiration date)</li>
+          <li>Certificate chain integrity</li>
+          <li>Certificate authority trustworthiness</li>
+          <li>Cipher suite strength</li>
+          <li>TLS version (1.2 vs 1.3)</li>
+        </ul>
+        <p>For deeper TLS analysis, see the <strong>Security Headers Agent</strong> which examines HSTS and other security headers.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

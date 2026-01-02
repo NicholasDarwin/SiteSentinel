@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNS & Domain Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">🌍</div>
+      <div>
+        <h1>DNS & Domain Agent</h1>
+        <span class="agent-file-badge">dns.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The DNS & Domain Agent validates DNS configuration and email security settings, including MX records, SPF, DKIM, and DMARC policies that protect against email spoofing.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>DNS & Domain</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>🌍</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/dns.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Checks Performed</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>DNS Resolution</h4>
+          <p>Verifies that the domain resolves to valid IP addresses (A/AAAA records).</p>
+        </div>
+        <div class="info-card">
+          <h4>MX Records</h4>
+          <p>Checks for mail exchange servers configured for the domain.</p>
+        </div>
+        <div class="info-card">
+          <h4>SPF Record</h4>
+          <p>Validates Sender Policy Framework to prevent email spoofing.</p>
+        </div>
+        <div class="info-card">
+          <h4>DKIM</h4>
+          <p>Checks for DomainKeys Identified Mail signatures.</p>
+        </div>
+        <div class="info-card">
+          <h4>DMARC Policy</h4>
+          <p>Validates Domain-based Message Authentication policy.</p>
+        </div>
+        <div class="info-card">
+          <h4>CAA Records</h4>
+          <p>Checks Certificate Authority Authorization records.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>dns</code> — Node.js built-in DNS module</li>
+          <li><code>dns.promises</code> — Promise-based DNS lookups</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 DNS Query Types</h4>
+        <pre><code>const dns = require('dns').promises;
+
+// A records (IPv4)
+const aRecords = await dns.resolve4(hostname);
+
+// AAAA records (IPv6)  
+const aaaaRecords = await dns.resolve6(hostname);
+
+// MX records
+const mxRecords = await dns.resolveMx(hostname);
+
+// TXT records (for SPF, DKIM, DMARC)
+const txtRecords = await dns.resolveTxt(hostname);
+const dmarcRecords = await dns.resolveTxt(`_dmarc.${hostname}`);</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Email Security Checks</h2>
+      
+      <div class="code-reference">
+        <h4>SPF Record Format</h4>
+        <pre><code>v=spf1 include:_spf.google.com ~all</code></pre>
+        <p>Specifies which servers are allowed to send email for the domain.</p>
+      </div>
+
+      <div class="code-reference">
+        <h4>DMARC Record Format</h4>
+        <pre><code>v=DMARC1; p=reject; rua=mailto:dmarc@example.com</code></pre>
+        <p>Defines policy for handling failed SPF/DKIM checks.</p>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'DNS & Domain',
+  icon: '🌍',
+  score: 0-100,
+  checks: [
+    {
+      name: 'DNS Resolution',
+      status: 'pass',
+      description: 'Domain resolves to 1.2.3.4',
+      severity: 'critical'
+    },
+    {
+      name: 'SPF Record',
+      status: 'pass' | 'fail' | 'warn',
+      description: 'SPF record found and valid',
+      severity: 'high'
+    },
+    // ... more checks
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

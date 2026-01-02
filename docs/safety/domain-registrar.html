@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Registrar Status — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-check-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
+    
+    <header class="check-detail-header">
+      <div class="check-icon-large medium">🌐</div>
+      <div>
+        <h1>Domain Registrar Status</h1>
+        <span class="severity-badge medium">Medium Severity</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Check Measures</h2>
+      <p>This check analyzes the domain's registration information via <strong>WHOIS</strong> lookups to identify potentially suspicious domains, such as newly registered domains often used in phishing campaigns.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Why It Matters</h2>
+      <ul>
+        <li><strong>Phishing Detection</strong> — Phishing domains are often registered days before attacks</li>
+        <li><strong>Domain Expiration Risk</strong> — Expiring domains may be hijacked</li>
+        <li><strong>Ownership Verification</strong> — Identify who controls the domain</li>
+        <li><strong>DNS Hijacking Risk</strong> — Check for unauthorized domain transfers</li>
+        <li><strong>Brand Protection</strong> — Identify typosquatting domains</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>How Data Is Obtained</h2>
+      
+      <div class="code-reference">
+        <h4>📁 Source Files</h4>
+        <ul>
+          <li><code>src/checks/safety.check.js</code> — Placeholder check</li>
+          <li><code>src/checks/whois.check.js</code> — Full WHOIS implementation</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔧 Function in safety.check.js</h4>
+        <code>SafetyCheck.analyze(url)</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Current Implementation</h4>
+        <pre><code>// Informational - requires WHOIS lookup
+checks.push({
+  name: 'Domain Registrar Status',
+  status: 'info',
+  description: 'Domain registration status requires WHOIS lookup',
+  severity: 'medium'
+});</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔗 Related Agent</h4>
+        <p>For full WHOIS data, see the <strong>WHOIS Agent</strong> (<code>whois.check.js</code>) which retrieves:</p>
+        <ul>
+          <li>Domain registrar name</li>
+          <li>Registration date (creation date)</li>
+          <li>Expiration date</li>
+          <li>Nameservers</li>
+          <li>Registrant information (when available)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Status Values</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-info">
+          <td><span class="status-icon">ℹ️</span> info</td>
+          <td>Informational only in the Safety section. Full WHOIS data is available through the WHOIS Agent.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Severity: Medium</h2>
+      <p>This check has <strong>medium</strong> severity because:</p>
+      <ul>
+        <li>Domain age alone doesn't determine if a site is malicious</li>
+        <li>Many legitimate new businesses have new domains</li>
+        <li>WHOIS privacy protection is legal and common</li>
+        <li>Combined with other signals, it's more meaningful</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>WHOIS Data Points</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>🏢 Registrar</h4>
+          <p>The company where the domain was registered. Some registrars are known for lax abuse policies.</p>
+        </div>
+        <div class="info-card">
+          <h4>📅 Creation Date</h4>
+          <p>When the domain was first registered. Domains less than 30 days old are higher risk for phishing.</p>
+        </div>
+        <div class="info-card">
+          <h4>⏰ Expiration Date</h4>
+          <p>When the registration expires. Domains about to expire may indicate abandonment or instability.</p>
+        </div>
+        <div class="info-card">
+          <h4>🔄 Updated Date</h4>
+          <p>Last time domain records were modified. Recent changes may indicate ownership transfer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Red Flags in WHOIS Data</h2>
+      <div class="warning-box">
+        <h4>🚩 Suspicious Indicators</h4>
+        <ul>
+          <li>Domain registered within the last 7-30 days</li>
+          <li>Short registration period (1 year only)</li>
+          <li>Registrar known for hosting malicious domains</li>
+          <li>Registration in country different from claimed business</li>
+          <li>Recent nameserver changes</li>
+          <li>Free TLDs (.tk, .ml, .ga, .cf)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Impact on Category Score</h2>
+      <p>Currently returns <code>info</code> status with <strong>neutral impact</strong> on the Safety & Threats score. The WHOIS Agent provides more detailed domain information in its own category.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

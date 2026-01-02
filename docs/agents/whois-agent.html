@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WHOIS Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">📋</div>
+      <div>
+        <h1>WHOIS Agent</h1>
+        <span class="agent-file-badge">whois.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The WHOIS Agent retrieves domain registration information including registrar, creation date, expiration date, nameservers, and registrant details when available.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>Domain Info</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>📋</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/whois.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Information Retrieved</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Domain Registrar</h4>
+          <p>The company where the domain is registered (e.g., GoDaddy, Namecheap, Cloudflare).</p>
+        </div>
+        <div class="info-card">
+          <h4>Creation Date</h4>
+          <p>When the domain was first registered. Newer domains may indicate higher risk.</p>
+        </div>
+        <div class="info-card">
+          <h4>Expiration Date</h4>
+          <p>When the domain registration expires. Soon-to-expire domains may be abandoned.</p>
+        </div>
+        <div class="info-card">
+          <h4>Updated Date</h4>
+          <p>When domain records were last modified.</p>
+        </div>
+        <div class="info-card">
+          <h4>Nameservers</h4>
+          <p>DNS servers handling the domain (reveals hosting provider).</p>
+        </div>
+        <div class="info-card">
+          <h4>Domain Age</h4>
+          <p>Calculated time since domain creation.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>whois</code> — WHOIS lookup library</li>
+          <li>Or external WHOIS API service</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 WHOIS Query</h4>
+        <pre><code>const whois = require('whois');
+const hostname = new URL(url).hostname;
+
+// Perform WHOIS lookup
+whois.lookup(hostname, (err, data) => {
+  if (err) {
+    // Handle error
+    return;
+  }
+  
+  // Parse WHOIS data
+  const registrar = extractField(data, 'Registrar:');
+  const creationDate = extractField(data, 'Creation Date:');
+  const expirationDate = extractField(data, 'Expiry Date:');
+  const nameservers = extractNameservers(data);
+});</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>WHOIS Privacy</h2>
+      <div class="info-box">
+        <h4>🔒 Privacy Protection</h4>
+        <p>Many domains use WHOIS privacy protection services that hide registrant details. This is legal and common, but can make it harder to verify site ownership.</p>
+        <p>Common privacy services include:</p>
+        <ul>
+          <li>WhoisGuard (Namecheap)</li>
+          <li>Domains By Proxy (GoDaddy)</li>
+          <li>Cloudflare Privacy Protection</li>
+          <li>Contact Privacy Inc.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Domain Age Analysis</h2>
+      <table class="info-table">
+        <tr>
+          <th>Domain Age</th>
+          <th>Risk Level</th>
+          <th>Notes</th>
+        </tr>
+        <tr>
+          <td>&lt; 7 days</td>
+          <td><span class="severity-badge critical">High Risk</span></td>
+          <td>Very new domains are often used for phishing</td>
+        </tr>
+        <tr>
+          <td>7-30 days</td>
+          <td><span class="severity-badge high">Elevated Risk</span></td>
+          <td>Still relatively new, warrants caution</td>
+        </tr>
+        <tr>
+          <td>1-6 months</td>
+          <td><span class="severity-badge medium">Moderate</span></td>
+          <td>Could be legitimate new business</td>
+        </tr>
+        <tr>
+          <td>&gt; 6 months</td>
+          <td><span class="severity-badge low">Lower Risk</span></td>
+          <td>Established domain (not a guarantee of safety)</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'Domain Info',
+  icon: '📋',
+  score: null, // Informational, no score
+  checks: [
+    {
+      name: 'Domain Registrar',
+      status: 'info',
+      description: 'Registered with Cloudflare, Inc.',
+      severity: 'low'
+    },
+    {
+      name: 'Domain Age',
+      status: 'info',
+      description: 'Domain is 3 years, 2 months old',
+      severity: 'low'
+    },
+    {
+      name: 'Expiration',
+      status: 'info' | 'warn',
+      description: 'Expires in 8 months',
+      severity: 'low'
+    }
+  ],
+  whoisData: {
+    registrar: 'Cloudflare, Inc.',
+    creationDate: '2022-10-15',
+    expirationDate: '2026-10-15',
+    nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com']
+  }
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

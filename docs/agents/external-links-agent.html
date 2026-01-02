@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>External Links Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">🔗</div>
+      <div>
+        <h1>External Links Agent</h1>
+        <span class="agent-file-badge">external-links.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The External Links Agent discovers and validates all external links on a page, checking for broken links, redirects, and safety scores of linked destinations.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>External Links</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>🔗</td>
+        </tr>
+        <tr>
+          <td>Source Files</td>
+          <td><code>src/checks/external-links.check.js</code><br><code>src/checks/link-analysis.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Checks Performed</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Link Discovery</h4>
+          <p>Finds all &lt;a href&gt; links pointing to external domains.</p>
+        </div>
+        <div class="info-card">
+          <h4>Link Reachability</h4>
+          <p>Verifies each external link returns a valid HTTP response.</p>
+        </div>
+        <div class="info-card">
+          <h4>Broken Links</h4>
+          <p>Identifies links that return 404 or other error status codes.</p>
+        </div>
+        <div class="info-card">
+          <h4>Redirect Chains</h4>
+          <p>Detects links that redirect and where they lead.</p>
+        </div>
+        <div class="info-card">
+          <h4>Safety Scoring</h4>
+          <p>Optionally scores each external link for safety threats.</p>
+        </div>
+        <div class="info-card">
+          <h4>noopener/noreferrer</h4>
+          <p>Checks if external links have proper security attributes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>axios</code> — HTTP client for fetching page and checking links</li>
+          <li><code>cheerio</code> — HTML parsing to extract links</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Link Discovery</h4>
+        <pre><code>const cheerio = require('cheerio');
+const $ = cheerio.load(response.data);
+const baseHostname = new URL(url).hostname;
+
+// Find all external links
+const externalLinks = [];
+$('a[href]').each((i, el) => {
+  const href = $(el).attr('href');
+  try {
+    const linkUrl = new URL(href, url);
+    if (linkUrl.hostname !== baseHostname) {
+      externalLinks.push({
+        url: linkUrl.href,
+        text: $(el).text().trim(),
+        rel: $(el).attr('rel')
+      });
+    }
+  } catch (e) {
+    // Invalid URL, skip
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Link Validation</h4>
+        <pre><code>// Check each external link
+for (const link of externalLinks) {
+  try {
+    const response = await axios.head(link.url, { 
+      timeout: 5000,
+      maxRedirects: 5
+    });
+    link.status = response.status;
+    link.reachable = true;
+  } catch (error) {
+    link.status = error.response?.status || 'unreachable';
+    link.reachable = false;
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Link Status Categories</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Icon</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-pass">
+          <td>Safe</td>
+          <td>✅</td>
+          <td>Link is reachable and passes safety checks</td>
+        </tr>
+        <tr class="status-warn">
+          <td>Warning</td>
+          <td>⚠️</td>
+          <td>Link works but has potential concerns</td>
+        </tr>
+        <tr class="status-fail">
+          <td>Unsafe</td>
+          <td>🚨</td>
+          <td>Link points to a potentially dangerous site</td>
+        </tr>
+        <tr class="status-fail">
+          <td>Broken</td>
+          <td>❌</td>
+          <td>Link returns 404 or other error</td>
+        </tr>
+        <tr class="status-error">
+          <td>Unreachable</td>
+          <td>⛔</td>
+          <td>Link destination could not be contacted</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'External Links',
+  icon: '🔗',
+  score: 0-100,
+  checks: [
+    {
+      name: 'External Links Found',
+      status: 'info',
+      description: '15 external links discovered',
+      severity: 'low'
+    },
+    {
+      name: 'Broken Links',
+      status: 'pass' | 'warn' | 'fail',
+      description: '0 broken links found',
+      severity: 'medium'
+    }
+  ],
+  scoredLinks: [
+    {
+      url: 'https://example.com',
+      status: 'Safe',
+      score: 85
+    },
+    // ... more links
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

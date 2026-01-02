@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Security — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-check-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
+    
+    <header class="check-detail-header">
+      <div class="check-icon-large critical">📝</div>
+      <div>
+        <h1>Form Security</h1>
+        <span class="severity-badge critical">Critical Severity</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Check Measures</h2>
+      <p>This check detects whether HTML forms exist on pages served over <strong>HTTP</strong> (non-encrypted connections). Forms on HTTP pages expose user input to interception.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Why It Matters</h2>
+      <ul>
+        <li><strong>Credential Theft</strong> — Login forms on HTTP expose usernames and passwords</li>
+        <li><strong>Payment Data</strong> — Credit card forms without HTTPS violate PCI-DSS compliance</li>
+        <li><strong>Personal Information</strong> — Contact forms leak email addresses, phone numbers, addresses</li>
+        <li><strong>Man-in-the-Middle Attacks</strong> — Attackers can capture or modify form submissions</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>How Data Is Obtained</h2>
+      
+      <div class="code-reference">
+        <h4>📁 Source File</h4>
+        <code>src/checks/safety.check.js</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔧 Function</h4>
+        <code>SafetyCheck.analyze(url)</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>📥 Inputs</h4>
+        <ul>
+          <li><strong>url</strong> — To check if HTTPS is used</li>
+          <li><strong>response.data</strong> — HTML content from the HTTP response</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Detection Logic</h4>
+        <pre><code>// Check for forms on non-HTTPS pages
+const hasFormWithoutHttps = response.data?.includes('form') 
+  && !url.startsWith('https://');
+
+checks.push({
+  name: 'Form Security',
+  status: hasFormWithoutHttps ? 'fail' : 'pass',
+  description: hasFormWithoutHttps 
+    ? 'Forms detected on non-HTTPS page' 
+    : 'Forms properly secured or no forms detected',
+  severity: 'critical'
+});</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4>📚 Libraries</h4>
+        <ul>
+          <li><code>axios</code> — Used to fetch the page HTML via <code>response.data</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Status Values</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Condition</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-pass">
+          <td><span class="status-icon">✅</span> pass</td>
+          <td>HTTPS is used OR no forms found</td>
+          <td>Forms are secure or the page doesn't collect user input.</td>
+        </tr>
+        <tr class="status-fail">
+          <td><span class="status-icon">❌</span> fail</td>
+          <td>HTTP + forms detected</td>
+          <td>User data submitted via forms can be intercepted. Critical risk.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Severity: Critical</h2>
+      <p>This check has <strong>critical</strong> severity because:</p>
+      <ul>
+        <li>Forms typically collect sensitive user data</li>
+        <li>HTTP transmission exposes this data to anyone on the network</li>
+        <li>Even "harmless" forms can leak personal information</li>
+        <li>Users expect their input to be protected</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Impact on Category Score</h2>
+      <p>As a <strong>critical</strong> severity check, a <code>fail</code> status significantly reduces the overall Safety & Threats score.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Limitations</h2>
+      <div class="warning-box">
+        <h4>⚠️ Detection Limitations</h4>
+        <ul>
+          <li>Uses simple string matching (<code>includes('form')</code>)</li>
+          <li>May false-positive on pages mentioning "form" in text content</li>
+          <li>Doesn't check individual form <code>action</code> URLs</li>
+          <li>Doesn't detect JavaScript-generated forms</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SiteSentinel — Safety & Threats</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-safety">
+  <!-- Navigation -->
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="index.html" class="navbar-brand">
+        <img src="assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="agents.html" class="nav-link">Agents</a></li>
+          <li><a href="about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <header class="pro-hero">
+      <h1>⚠️ Safety & Threats</h1>
+      <p class="lead">Comprehensive malware detection, phishing analysis, and threat assessment. Click any check below to learn exactly how it works.</p>
+    </header>
+
+    <section class="checks-grid">
+      <!-- 1. Malware/Phishing -->
+      <a href="safety/malware-phishing.html" class="check-card check-card-clickable">
+        <div class="check-card-icon critical">🦠</div>
+        <div class="check-card-content">
+          <h3>Malware/Phishing Indicators</h3>
+          <p>Detects known malware, phishing attempts, typosquatting, and suspicious URL patterns using Google Safe Browsing API and heuristic analysis.</p>
+          <span class="severity-badge critical">Critical Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 2. SSL Certificate -->
+      <a href="safety/ssl-certificate.html" class="check-card check-card-clickable">
+        <div class="check-card-icon critical">🔒</div>
+        <div class="check-card-content">
+          <h3>SSL Certificate Status</h3>
+          <p>Verifies that the website uses HTTPS encryption to protect data in transit between the user and the server.</p>
+          <span class="severity-badge critical">Critical Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 3. Form Security -->
+      <a href="safety/form-security.html" class="check-card check-card-clickable">
+        <div class="check-card-icon critical">📝</div>
+        <div class="check-card-content">
+          <h3>Form Security</h3>
+          <p>Checks if HTML forms are present on non-HTTPS pages, which could expose sensitive user data to interception.</p>
+          <span class="severity-badge critical">Critical Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 4. Outdated Software -->
+      <a href="safety/outdated-software.html" class="check-card check-card-clickable">
+        <div class="check-card-icon medium">📦</div>
+        <div class="check-card-content">
+          <h3>Outdated Software Detection</h3>
+          <p>Identifies potentially outdated frameworks, libraries, or CMS versions that may contain known vulnerabilities.</p>
+          <span class="severity-badge medium">Medium Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 5. SQL Injection -->
+      <a href="safety/sql-injection.html" class="check-card check-card-clickable">
+        <div class="check-card-icon critical">💉</div>
+        <div class="check-card-content">
+          <h3>SQL Injection Protection</h3>
+          <p>Assesses server-side protection against SQL injection attacks that could compromise database security.</p>
+          <span class="severity-badge critical">Critical Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 6. XSS Protection -->
+      <a href="safety/xss-protection.html" class="check-card check-card-clickable">
+        <div class="check-card-icon high">🛡️</div>
+        <div class="check-card-content">
+          <h3>XSS (Cross-Site Scripting) Protection</h3>
+          <p>Evaluates protection against XSS attacks through Content Security Policy headers and input sanitization.</p>
+          <span class="severity-badge high">High Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 7. Iframe Usage -->
+      <a href="safety/iframe-usage.html" class="check-card check-card-clickable">
+        <div class="check-card-icon medium">🖼️</div>
+        <div class="check-card-content">
+          <h3>Iframe Usage</h3>
+          <p>Detects embedded iframes that could potentially load malicious content from untrusted third-party sources.</p>
+          <span class="severity-badge medium">Medium Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 8. External Scripts -->
+      <a href="safety/external-scripts.html" class="check-card check-card-clickable">
+        <div class="check-card-icon high">📜</div>
+        <div class="check-card-content">
+          <h3>External Scripts</h3>
+          <p>Counts and analyzes external JavaScript sources that could introduce security vulnerabilities or tracking.</p>
+          <span class="severity-badge high">High Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 9. Rate Limiting -->
+      <a href="safety/rate-limiting.html" class="check-card check-card-clickable">
+        <div class="check-card-icon medium">🤖</div>
+        <div class="check-card-content">
+          <h3>Rate Limiting / Bot Protection</h3>
+          <p>Checks for protection mechanisms against brute force attacks, credential stuffing, and automated bot abuse.</p>
+          <span class="severity-badge medium">Medium Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+
+      <!-- 10. Domain Registrar -->
+      <a href="safety/domain-registrar.html" class="check-card check-card-clickable">
+        <div class="check-card-icon medium">🌐</div>
+        <div class="check-card-content">
+          <h3>Domain Registrar Status</h3>
+          <p>Analyzes domain registration information via WHOIS to identify newly registered or suspicious domains.</p>
+          <span class="severity-badge medium">Medium Severity</span>
+        </div>
+        <div class="check-card-arrow">→</div>
+      </a>
+    </section>
+
+    <section class="info-section">
+      <h2>How Safety Scoring Works</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>🎯 Score Calculation</h4>
+          <p>Each check contributes to the overall Safety & Threats score using <code>calculateCategoryScore()</code>. Checks with <code>pass</code> status add positive points, while <code>fail</code> and <code>error</code> statuses reduce the score based on severity.</p>
+        </div>
+        <div class="info-card">
+          <h4>🚨 Malware Override</h4>
+          <p>If malware or phishing is detected, the entire category score is forced to <strong>0</strong> regardless of other check results. This ensures dangerous sites are always flagged appropriately.</p>
+        </div>
+        <div class="info-card">
+          <h4>📊 Status Meanings</h4>
+          <ul class="status-list">
+            <li><span class="status-icon pass">✅</span> <strong>Pass:</strong> Check passed successfully</li>
+            <li><span class="status-icon warn">⚠️</span> <strong>Warn:</strong> Potential issue detected</li>
+            <li><span class="status-icon info">ℹ️</span> <strong>Info:</strong> Informational only</li>
+            <li><span class="status-icon fail">❌</span> <strong>Fail:</strong> Security issue found</li>
+            <li><span class="status-icon error">🔴</span> <strong>Error:</strong> Check could not complete</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

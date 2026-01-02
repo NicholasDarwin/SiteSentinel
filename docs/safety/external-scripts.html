@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>External Scripts — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-check-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
+    
+    <header class="check-detail-header">
+      <div class="check-icon-large high">📜</div>
+      <div>
+        <h1>External Scripts</h1>
+        <span class="severity-badge high">High Severity</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Check Measures</h2>
+      <p>This check counts the number of <strong>external JavaScript files</strong> loaded by the page. External scripts are JavaScript files hosted on third-party domains.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Why It Matters</h2>
+      <ul>
+        <li><strong>Supply Chain Attacks</strong> — If a third-party CDN is compromised, your site is too</li>
+        <li><strong>Data Exfiltration</strong> — External scripts can steal user data</li>
+        <li><strong>Cryptojacking</strong> — Scripts can mine cryptocurrency using visitor CPUs</li>
+        <li><strong>Tracking</strong> — Third-party scripts often track user behavior</li>
+        <li><strong>Performance</strong> — Each external script adds network requests and latency</li>
+        <li><strong>Single Point of Failure</strong> — If the external server is down, scripts fail</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>How Data Is Obtained</h2>
+      
+      <div class="code-reference">
+        <h4>📁 Source File</h4>
+        <code>src/checks/safety.check.js</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔧 Function</h4>
+        <code>SafetyCheck.analyze(url)</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>📥 Input</h4>
+        <p><code>response.data</code> — The HTML content returned by the target URL</p>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Detection Logic</h4>
+        <pre><code>// Count external script tags with src attribute
+const externalScripts = (response.data?.match(/&lt;script[^>]+src=/gi) || []).length;
+
+checks.push({
+  name: 'External Scripts',
+  status: externalScripts > 0 ? 'warn' : 'pass',
+  description: externalScripts > 0 
+    ? `${externalScripts} external scripts - verify they're from trusted sources` 
+    : 'No external scripts',
+  severity: 'high'
+});</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4>📚 Libraries</h4>
+        <ul>
+          <li><code>axios</code> — Fetches the page HTML</li>
+          <li>Native JavaScript <code>String.match()</code> with regex</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Status Values</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Condition</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-pass">
+          <td><span class="status-icon">✅</span> pass</td>
+          <td>No external scripts</td>
+          <td>All JavaScript is self-hosted. Maximum control over code execution.</td>
+        </tr>
+        <tr class="status-warn">
+          <td><span class="status-icon">⚠️</span> warn</td>
+          <td>1+ external scripts</td>
+          <td>Third-party JavaScript detected. Verify sources are trustworthy.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Severity: High</h2>
+      <p>This check has <strong>high</strong> severity because:</p>
+      <ul>
+        <li>External scripts have full access to your page's DOM</li>
+        <li>They can read form inputs, cookies, and localStorage</li>
+        <li>Supply chain attacks are increasingly common</li>
+        <li>Even reputable CDNs can be compromised</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Common External Script Sources</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Generally Trusted</h4>
+          <ul>
+            <li>Google Analytics / Tag Manager</li>
+            <li>Cloudflare CDN</li>
+            <li>jQuery from official CDN</li>
+            <li>Major framework CDNs (unpkg, cdnjs)</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>Use Caution</h4>
+          <ul>
+            <li>Unknown analytics services</li>
+            <li>Ad networks</li>
+            <li>Social sharing widgets</li>
+            <li>Chat/support widgets</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Security Best Practices</h2>
+      <div class="info-box">
+        <h4>🛡️ Protecting Against External Script Risks</h4>
+        <ul>
+          <li><strong>Subresource Integrity (SRI)</strong> — Add <code>integrity</code> attribute to verify file hasn't changed</li>
+          <li><strong>Content Security Policy</strong> — Restrict which domains can serve scripts</li>
+          <li><strong>Self-host when possible</strong> — Download and serve scripts from your own server</li>
+          <li><strong>Audit regularly</strong> — Review what scripts are loaded and why</li>
+          <li><strong>Monitor for changes</strong> — Detect if third-party scripts are modified</li>
+        </ul>
+        <h4>SRI Example</h4>
+        <pre><code>&lt;script 
+  src="https://cdn.example.com/lib.js"
+  integrity="sha384-oqVuAfXRKap7fdgcCY5..."
+  crossorigin="anonymous"&gt;
+&lt;/script&gt;</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Impact on Category Score</h2>
+      <p>As a <strong>high</strong> severity check with <code>warn</code> status, external scripts have a <strong>notable negative impact</strong> on the Safety & Threats score. The more external scripts detected, the higher the perceived risk.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

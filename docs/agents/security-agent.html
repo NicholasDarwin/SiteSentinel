@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Headers Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">🔐</div>
+      <div>
+        <h1>Security Headers Agent</h1>
+        <span class="agent-file-badge">security.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The Security Headers Agent examines HTTP response headers that protect against common web vulnerabilities like XSS, clickjacking, MIME-type sniffing, and insecure connections.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>Security & HTTPS</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>🔐</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/security.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Headers Checked</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Content-Security-Policy (CSP)</h4>
+          <p>Restricts which resources can be loaded, preventing XSS and data injection attacks.</p>
+          <span class="severity-badge high">High</span>
+        </div>
+        <div class="info-card">
+          <h4>Strict-Transport-Security (HSTS)</h4>
+          <p>Forces browsers to use HTTPS, preventing downgrade attacks.</p>
+          <span class="severity-badge critical">Critical</span>
+        </div>
+        <div class="info-card">
+          <h4>X-Frame-Options</h4>
+          <p>Prevents clickjacking by controlling iframe embedding.</p>
+          <span class="severity-badge high">High</span>
+        </div>
+        <div class="info-card">
+          <h4>X-Content-Type-Options</h4>
+          <p>Prevents MIME-type sniffing attacks.</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+        <div class="info-card">
+          <h4>X-XSS-Protection</h4>
+          <p>Legacy XSS filter (deprecated but still checked).</p>
+          <span class="severity-badge low">Low</span>
+        </div>
+        <div class="info-card">
+          <h4>Referrer-Policy</h4>
+          <p>Controls what referrer information is sent with requests.</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+        <div class="info-card">
+          <h4>Permissions-Policy</h4>
+          <p>Controls which browser features can be used.</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📥 Primary Input</h4>
+        <p>HTTP response headers from the target URL obtained via <code>axios.get()</code></p>
+      </div>
+
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>axios</code> — HTTP client for fetching the target URL</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 How Headers Are Read</h4>
+        <pre><code>const response = await axios.get(url, { timeout: 15000 });
+const headers = response.headers;
+
+// Check for specific header
+const csp = headers['content-security-policy'];
+const hsts = headers['strict-transport-security'];</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Score Calculation</h2>
+      <p>Each security header contributes to the overall Security score based on:</p>
+      <ul>
+        <li>Presence of the header</li>
+        <li>Proper configuration (not just present, but correctly set)</li>
+        <li>Severity weighting of the check</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'Security & HTTPS',
+  icon: '🔐',
+  score: 0-100,
+  checks: [
+    {
+      name: 'Content-Security-Policy',
+      status: 'pass' | 'fail' | 'warn',
+      description: 'CSP header present and properly configured',
+      severity: 'high'
+    },
+    // ... more header checks
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

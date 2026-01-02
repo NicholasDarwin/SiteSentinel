@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safety & Threats Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">⚠️</div>
+      <div>
+        <h1>Safety & Threats Agent</h1>
+        <span class="agent-file-badge">safety.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The Safety & Threats Agent analyzes websites for potential security threats, malware indicators, phishing attempts, and unsafe practices that could harm visitors.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>Safety & Threats</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>⚠️</td>
+        </tr>
+        <tr>
+          <td>Number of Checks</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/safety.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Checks Performed</h2>
+      <div class="checks-list">
+        <a href="../safety/malware-phishing.html" class="check-link">
+          <span class="check-link-icon">🦠</span>
+          <span>Malware/Phishing Indicators</span>
+          <span class="severity-badge critical">Critical</span>
+        </a>
+        <a href="../safety/ssl-certificate.html" class="check-link">
+          <span class="check-link-icon">🔒</span>
+          <span>SSL Certificate Status</span>
+          <span class="severity-badge critical">Critical</span>
+        </a>
+        <a href="../safety/form-security.html" class="check-link">
+          <span class="check-link-icon">📝</span>
+          <span>Form Security</span>
+          <span class="severity-badge critical">Critical</span>
+        </a>
+        <a href="../safety/outdated-software.html" class="check-link">
+          <span class="check-link-icon">📦</span>
+          <span>Outdated Software Detection</span>
+          <span class="severity-badge medium">Medium</span>
+        </a>
+        <a href="../safety/sql-injection.html" class="check-link">
+          <span class="check-link-icon">💉</span>
+          <span>SQL Injection Protection</span>
+          <span class="severity-badge critical">Critical</span>
+        </a>
+        <a href="../safety/xss-protection.html" class="check-link">
+          <span class="check-link-icon">🛡️</span>
+          <span>XSS Protection</span>
+          <span class="severity-badge high">High</span>
+        </a>
+        <a href="../safety/iframe-usage.html" class="check-link">
+          <span class="check-link-icon">🖼️</span>
+          <span>Iframe Usage</span>
+          <span class="severity-badge medium">Medium</span>
+        </a>
+        <a href="../safety/external-scripts.html" class="check-link">
+          <span class="check-link-icon">📜</span>
+          <span>External Scripts</span>
+          <span class="severity-badge high">High</span>
+        </a>
+        <a href="../safety/rate-limiting.html" class="check-link">
+          <span class="check-link-icon">🤖</span>
+          <span>Rate Limiting / Bot Protection</span>
+          <span class="severity-badge medium">Medium</span>
+        </a>
+        <a href="../safety/domain-registrar.html" class="check-link">
+          <span class="check-link-icon">🌐</span>
+          <span>Domain Registrar Status</span>
+          <span class="severity-badge medium">Medium</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources & APIs</h2>
+      
+      <div class="code-reference">
+        <h4>🔌 External APIs</h4>
+        <table class="info-table">
+          <tr>
+            <th>API</th>
+            <th>Environment Variable</th>
+            <th>Purpose</th>
+          </tr>
+          <tr>
+            <td>Google Safe Browsing v4</td>
+            <td><code>GOOGLE_SAFE_BROWSING_API_KEY</code></td>
+            <td>Check URLs against malware/phishing databases</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>axios</code> — HTTP client for fetching target URL and API calls</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>📥 Inputs</h4>
+        <ul>
+          <li><strong>url</strong> — The target URL to analyze</li>
+          <li><strong>hostname</strong> — Extracted from URL for domain analysis</li>
+          <li><strong>HTTP response</strong> — Headers and body content</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Internal Functions</h2>
+      
+      <div class="code-reference">
+        <h4><code>SafetyCheck.analyze(url)</code></h4>
+        <p>Main entry point. Fetches the URL, runs all 10 checks, and returns the category result.</p>
+        <pre><code>async analyze(url) {
+  const checks = [];
+  const hostname = new URL(url).hostname;
+  const response = await axios.get(url, { timeout: 15000 });
+  
+  // Run all checks...
+  
+  return {
+    category: 'Safety & Threats',
+    icon: '⚠️',
+    score,
+    checks,
+    malwareDetected: malwareFlag
+  };
+}</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4><code>detectPhishingIndicators(url, hostname)</code></h4>
+        <p>Heuristic detection for phishing patterns including:</p>
+        <ul>
+          <li>Base64-encoded payloads in URLs</li>
+          <li>Suspicious URL patterns and redirect parameters</li>
+          <li>Typosquatting of major brands</li>
+          <li>IP addresses instead of domain names</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4><code>checkDomainReputation(hostname, url)</code></h4>
+        <p>Analyzes domain for suspicious characteristics:</p>
+        <ul>
+          <li>High-risk TLDs (.click, .download, .tk, etc.)</li>
+          <li>Random subdomain patterns</li>
+          <li>Generic financial brand names on suspicious TLDs</li>
+          <li>Tracking parameter patterns</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Score Calculation</h2>
+      
+      <div class="code-reference">
+        <h4>Standard Calculation</h4>
+        <p>Uses <code>calculateCategoryScore(checks)</code> from <code>score-calculator.util.js</code> which weights checks by:</p>
+        <ul>
+          <li>Status (pass, fail, warn, info, error)</li>
+          <li>Severity (critical, high, medium, low)</li>
+        </ul>
+      </div>
+
+      <div class="score-impact critical">
+        <h4>⚠️ Special Malware Override</h4>
+        <p>If malware or phishing is detected, the score is <strong>forced to 0</strong> regardless of other checks:</p>
+        <pre><code>if (malwareFlag) {
+  score = 0;
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'Safety & Threats',
+  icon: '⚠️',
+  score: 0-100,
+  checks: [
+    {
+      name: 'Check Name',
+      status: 'pass' | 'fail' | 'warn' | 'info' | 'error',
+      description: 'Human-readable result',
+      severity: 'critical' | 'high' | 'medium' | 'low'
+    },
+    // ... 9 more checks
+  ],
+  malwareDetected: true | false
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

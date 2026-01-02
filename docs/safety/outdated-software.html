@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outdated Software Detection — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-check-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
+    
+    <header class="check-detail-header">
+      <div class="check-icon-large medium">📦</div>
+      <div>
+        <h1>Outdated Software Detection</h1>
+        <span class="severity-badge medium">Medium Severity</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Check Measures</h2>
+      <p>This check aims to identify outdated frameworks, CMS platforms, JavaScript libraries, or server software that may contain known security vulnerabilities.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Why It Matters</h2>
+      <ul>
+        <li><strong>Known Vulnerabilities</strong> — Outdated software often has publicly documented exploits (CVEs)</li>
+        <li><strong>Automated Attacks</strong> — Bots scan the internet for known vulnerable versions</li>
+        <li><strong>Compliance</strong> — Security standards require keeping software updated</li>
+        <li><strong>Data Breaches</strong> — Many breaches result from unpatched software</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>How Data Is Obtained</h2>
+      
+      <div class="code-reference">
+        <h4>📁 Source File</h4>
+        <code>src/checks/safety.check.js</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔧 Function</h4>
+        <code>SafetyCheck.analyze(url)</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Current Implementation</h4>
+        <pre><code>// Placeholder - requires deep framework version analysis
+checks.push({
+  name: 'Outdated Software Detection',
+  status: 'info',
+  description: 'Requires deep framework version analysis',
+  severity: 'medium'
+});</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Status Values</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-info">
+          <td><span class="status-icon">ℹ️</span> info</td>
+          <td>This check is informational only. Deep version analysis is not currently implemented.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Severity: Medium</h2>
+      <p>This check has <strong>medium</strong> severity because:</p>
+      <ul>
+        <li>Not all outdated software has actively exploited vulnerabilities</li>
+        <li>Impact depends on what the software is used for</li>
+        <li>Some updates are feature releases, not security patches</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Future Implementation Ideas</h2>
+      <div class="info-box">
+        <h4>🔮 Potential Enhancements</h4>
+        <ul>
+          <li>Parse <code>X-Powered-By</code> headers for server version info</li>
+          <li>Detect WordPress, Drupal, Joomla versions from meta tags</li>
+          <li>Scan JavaScript files for library version comments</li>
+          <li>Check <code>generator</code> meta tags</li>
+          <li>Cross-reference detected versions against CVE databases</li>
+          <li>Integrate with Wappalyzer or similar technology detection</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Impact on Category Score</h2>
+      <p>Currently returns <code>info</code> status, which has <strong>neutral impact</strong> on the category score. Once fully implemented, outdated software detection would reduce the score based on the severity of known vulnerabilities.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

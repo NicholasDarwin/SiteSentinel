@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Agent — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-agent-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../agents.html" class="back-link">← Back to Agents</a>
+    
+    <header class="agent-detail-header">
+      <div class="agent-icon-large">♿</div>
+      <div>
+        <h1>Accessibility Agent</h1>
+        <span class="agent-file-badge">accessibility.check.js</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Agent Does</h2>
+      <p>The Accessibility Agent evaluates WCAG 2.1 compliance, checking for alt text, form labels, ARIA attributes, keyboard navigation, and other accessibility features that ensure websites are usable by everyone.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Category Information</h2>
+      <table class="info-table">
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Category Name</td>
+          <td><code>Accessibility</code></td>
+        </tr>
+        <tr>
+          <td>Category Icon</td>
+          <td>♿</td>
+        </tr>
+        <tr>
+          <td>Source File</td>
+          <td><code>src/checks/accessibility.check.js</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Checks Performed</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>Image Alt Text</h4>
+          <p>Checks that all images have descriptive alt attributes.</p>
+          <span class="severity-badge high">High</span>
+        </div>
+        <div class="info-card">
+          <h4>Form Labels</h4>
+          <p>Validates that form inputs have associated labels.</p>
+          <span class="severity-badge high">High</span>
+        </div>
+        <div class="info-card">
+          <h4>Language Attribute</h4>
+          <p>Checks for lang attribute on the html element.</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+        <div class="info-card">
+          <h4>Link Text</h4>
+          <p>Ensures links have descriptive text (not just "click here").</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+        <div class="info-card">
+          <h4>ARIA Attributes</h4>
+          <p>Validates proper use of ARIA roles and attributes.</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+        <div class="info-card">
+          <h4>Skip Links</h4>
+          <p>Checks for skip navigation links for keyboard users.</p>
+          <span class="severity-badge low">Low</span>
+        </div>
+        <div class="info-card">
+          <h4>Heading Order</h4>
+          <p>Ensures headings follow logical hierarchy (H1 → H2 → H3).</p>
+          <span class="severity-badge medium">Medium</span>
+        </div>
+        <div class="info-card">
+          <h4>Color Contrast</h4>
+          <p>Notes about color contrast (requires visual analysis).</p>
+          <span class="severity-badge high">High</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Data Sources</h2>
+      
+      <div class="code-reference">
+        <h4>📚 Libraries Used</h4>
+        <ul>
+          <li><code>axios</code> — HTTP client for fetching the page</li>
+          <li><code>cheerio</code> — jQuery-like HTML parsing</li>
+        </ul>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Accessibility Parsing</h4>
+        <pre><code>const cheerio = require('cheerio');
+const response = await axios.get(url);
+const $ = cheerio.load(response.data);
+
+// Check images for alt text
+const images = $('img');
+const imagesWithoutAlt = images.filter((i, el) => !$(el).attr('alt'));
+
+// Check form labels
+const inputs = $('input, select, textarea');
+const unlabeledInputs = inputs.filter((i, el) => {
+  const id = $(el).attr('id');
+  return !$(`label[for="${id}"]`).length && !$(el).attr('aria-label');
+});
+
+// Check language
+const langAttr = $('html').attr('lang');
+
+// Check for skip links
+const skipLink = $('a[href^="#main"], a[href^="#content"]');</code></pre>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>WCAG 2.1 Guidelines</h2>
+      <div class="info-box">
+        <h4>📋 Compliance Levels</h4>
+        <ul>
+          <li><strong>Level A</strong> — Minimum accessibility requirements</li>
+          <li><strong>Level AA</strong> — Standard for most websites (recommended)</li>
+          <li><strong>Level AAA</strong> — Highest level of accessibility</li>
+        </ul>
+        <p>SiteSentinel checks primarily target Level A and Level AA criteria.</p>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Return Value</h2>
+      <pre><code>{
+  category: 'Accessibility',
+  icon: '♿',
+  score: 0-100,
+  checks: [
+    {
+      name: 'Image Alt Text',
+      status: 'pass' | 'warn' | 'fail',
+      description: 'All 12 images have alt attributes',
+      severity: 'high'
+    },
+    {
+      name: 'Form Labels',
+      status: 'pass' | 'fail',
+      description: 'All form inputs have associated labels',
+      severity: 'high'
+    },
+    // ... more checks
+  ]
+}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

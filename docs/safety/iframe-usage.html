@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iframe Usage — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="page-check-detail">
+  <div class="nav-wrapper">
+    <nav class="navbar">
+      <a href="../index.html" class="navbar-brand">
+        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
+        <h1>SiteSentinel</h1>
+      </a>
+      <div class="navbar-links">
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="../features.html" class="nav-link">Features</a></li>
+          <li><a href="../safety.html" class="nav-link active">Safety</a></li>
+          <li><a href="../agents.html" class="nav-link">Agents</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page container">
+    <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
+    
+    <header class="check-detail-header">
+      <div class="check-icon-large medium">🖼️</div>
+      <div>
+        <h1>Iframe Usage</h1>
+        <span class="severity-badge medium">Medium Severity</span>
+      </div>
+    </header>
+
+    <section class="detail-section">
+      <h2>What This Check Measures</h2>
+      <p>This check detects the presence of <strong>&lt;iframe&gt;</strong> elements on the page. Iframes embed external content from other websites, which can introduce security risks if the embedded sources are not trustworthy.</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Why It Matters</h2>
+      <ul>
+        <li><strong>Malicious Content</strong> — Iframes can load malware or phishing pages</li>
+        <li><strong>Clickjacking</strong> — Attackers can overlay invisible iframes to capture clicks</li>
+        <li><strong>Data Leakage</strong> — Third-party iframes can track user behavior</li>
+        <li><strong>Performance</strong> — External iframes slow down page loading</li>
+        <li><strong>Trust Dependency</strong> — Your site's security depends on iframe sources</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>How Data Is Obtained</h2>
+      
+      <div class="code-reference">
+        <h4>📁 Source File</h4>
+        <code>src/checks/safety.check.js</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔧 Function</h4>
+        <code>SafetyCheck.analyze(url)</code>
+      </div>
+
+      <div class="code-reference">
+        <h4>📥 Input</h4>
+        <p><code>response.data</code> — The HTML content returned by the target URL</p>
+      </div>
+
+      <div class="code-reference">
+        <h4>🔍 Detection Logic</h4>
+        <pre><code>// Count iframe elements using regex
+const iframes = response.data?.match(/&lt;iframe/gi) || [];
+
+checks.push({
+  name: 'Iframe Usage',
+  status: iframes.length > 0 ? 'warn' : 'pass',
+  description: iframes.length > 0 
+    ? `${iframes.length} iframes detected - verify they're from trusted sources` 
+    : 'No iframes detected',
+  severity: 'medium'
+});</code></pre>
+      </div>
+
+      <div class="code-reference">
+        <h4>📚 Libraries</h4>
+        <ul>
+          <li><code>axios</code> — Fetches the page HTML</li>
+          <li>Native JavaScript <code>String.match()</code> with regex</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Status Values</h2>
+      <table class="status-table">
+        <tr>
+          <th>Status</th>
+          <th>Condition</th>
+          <th>Meaning</th>
+        </tr>
+        <tr class="status-pass">
+          <td><span class="status-icon">✅</span> pass</td>
+          <td>No iframes found</td>
+          <td>Page doesn't embed external content via iframes. Lower risk.</td>
+        </tr>
+        <tr class="status-warn">
+          <td><span class="status-icon">⚠️</span> warn</td>
+          <td>1+ iframes detected</td>
+          <td>External content is embedded. Should verify sources are trustworthy.</td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="detail-section">
+      <h2>Severity: Medium</h2>
+      <p>This check has <strong>medium</strong> severity because:</p>
+      <ul>
+        <li>Iframes from trusted sources (YouTube, Google Maps, etc.) are generally safe</li>
+        <li>The risk depends entirely on the iframe source</li>
+        <li>Many legitimate websites use iframes for embedding content</li>
+        <li>It's a warning to verify, not an automatic security failure</li>
+      </ul>
+    </section>
+
+    <section class="detail-section">
+      <h2>Common Legitimate Iframe Uses</h2>
+      <div class="info-box">
+        <ul>
+          <li>YouTube/Vimeo video embeds</li>
+          <li>Google Maps integration</li>
+          <li>Social media widgets (Twitter, Facebook)</li>
+          <li>Payment forms (Stripe, PayPal)</li>
+          <li>Chat widgets (Intercom, Zendesk)</li>
+          <li>Analytics dashboards</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Security Best Practices</h2>
+      <div class="info-box">
+        <h4>🛡️ Securing Iframes</h4>
+        <ul>
+          <li><strong>sandbox attribute</strong> — Restrict iframe capabilities</li>
+          <li><strong>Only trusted sources</strong> — Only embed content from known, reputable domains</li>
+          <li><strong>X-Frame-Options header</strong> — Prevent your site from being iframed (see Security section)</li>
+          <li><strong>CSP frame-ancestors</strong> — Modern alternative to X-Frame-Options</li>
+          <li><strong>referrerpolicy</strong> — Control what referrer info is sent</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Impact on Category Score</h2>
+      <p>As a <strong>medium</strong> severity check with <code>warn</code> status, iframe detection has a <strong>moderate negative impact</strong> on the Safety & Threats score. A <code>pass</code> (no iframes) contributes positively.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
