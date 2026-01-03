@@ -311,7 +311,7 @@ class SeoCheck {
 
     return {
       category: 'SEO & Metadata',
-      icon: '📊',
+      icon: 'bar-chart',
       score: calculateCategoryScore(checks),
       checks
     };

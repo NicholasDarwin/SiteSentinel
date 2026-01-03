@@ -33,7 +33,7 @@
     <a href="../index.html" class="back-link">← Back to Analysis</a>
     
     <header class="check-detail-header">
-      <div class="check-icon-large high">🛡️</div>
+      <div class="check-icon-large high"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
       <div>
         <h1>XSS (Cross-Site Scripting) Protection</h1>
         <span class="severity-badge high">High Severity</span>
@@ -60,17 +60,17 @@
       <h2>How Data Is Obtained</h2>
       
       <div class="code-reference">
-        <h4>📁 Source File</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Source File</h4>
         <code>src/checks/safety.check.js</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔧 Function</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Function</h4>
         <code>SafetyCheck.analyze(url)</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Current Implementation</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Current Implementation</h4>
         <pre><code>// References the Security section for CSP header analysis
 checks.push({
   name: 'XSS (Cross-Site Scripting) Protection',
@@ -81,7 +81,7 @@ checks.push({
       </div>
 
       <div class="code-reference">
-        <h4>🔗 Related Check</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Related Check</h4>
         <p>For actual XSS protection analysis, see the <strong>Security Headers Agent</strong> (<code>security.check.js</code>) which examines:</p>
         <ul>
           <li><code>Content-Security-Policy</code> (CSP) header</li>
@@ -99,7 +99,7 @@ checks.push({
           <th>Meaning</th>
         </tr>
         <tr class="status-info">
-          <td><span class="status-icon">ℹ️</span> info</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg></span> info</td>
           <td>This check is informational. XSS protection is primarily evaluated through CSP headers in the Security section.</td>
         </tr>
       </table>
@@ -137,7 +137,7 @@ checks.push({
     <section class="detail-section">
       <h2>Protection Mechanisms</h2>
       <div class="info-box">
-        <h4>🛡️ How to Protect Against XSS</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> How to Protect Against XSS</h4>
         <ul>
           <li><strong>Content Security Policy (CSP)</strong> — Restrict script sources via HTTP header</li>
           <li><strong>Output Encoding</strong> — Escape user input when rendering HTML</li>

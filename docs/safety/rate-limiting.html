@@ -33,7 +33,7 @@
     <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
     
     <header class="check-detail-header">
-      <div class="check-icon-large medium">🤖</div>
+      <div class="check-icon-large medium"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M7 15h.01M17 15h.01"/></svg></div>
       <div>
         <h1>Rate Limiting / Bot Protection</h1>
         <span class="severity-badge medium">Medium Severity</span>
@@ -61,17 +61,17 @@
       <h2>How Data Is Obtained</h2>
       
       <div class="code-reference">
-        <h4>📁 Source File</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Source File</h4>
         <code>src/checks/safety.check.js</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔧 Function</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Function</h4>
         <code>SafetyCheck.analyze(url)</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Current Implementation</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Current Implementation</h4>
         <pre><code>// Informational - bot protection varies by platform
 checks.push({
   name: 'Rate Limiting / Bot Protection',
@@ -90,7 +90,7 @@ checks.push({
           <th>Meaning</th>
         </tr>
         <tr class="status-info">
-          <td><span class="status-icon">ℹ️</span> info</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg></span> info</td>
           <td>Informational only. Detecting bot protection from the outside is difficult without triggering the protection itself.</td>
         </tr>
       </table>
@@ -110,7 +110,7 @@ checks.push({
     <section class="detail-section">
       <h2>Why SiteSentinel Doesn't Actively Test This</h2>
       <div class="warning-box">
-        <h4>⚠️ Detection Challenges</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Detection Challenges</h4>
         <p>Bot protection is intentionally difficult to detect from the outside:</p>
         <ul>
           <li>Rate limits require making many requests to trigger</li>
@@ -164,7 +164,7 @@ checks.push({
     <section class="detail-section">
       <h2>Recommendations</h2>
       <div class="info-box">
-        <h4>🛡️ Implementing Bot Protection</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Implementing Bot Protection</h4>
         <ul>
           <li><strong>Web Application Firewall (WAF)</strong> — Block common attack patterns</li>
           <li><strong>CAPTCHA on sensitive forms</strong> — Login, registration, password reset</li>

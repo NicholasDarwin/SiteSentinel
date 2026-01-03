@@ -33,7 +33,7 @@
     <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
     
     <header class="check-detail-header">
-      <div class="check-icon-large critical">💉</div>
+      <div class="check-icon-large critical"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
       <div>
         <h1>SQL Injection Protection</h1>
         <span class="severity-badge critical">Critical Severity</span>
@@ -60,17 +60,17 @@
       <h2>How Data Is Obtained</h2>
       
       <div class="code-reference">
-        <h4>📁 Source File</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Source File</h4>
         <code>src/checks/safety.check.js</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔧 Function</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Function</h4>
         <code>SafetyCheck.analyze(url)</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Current Implementation</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Current Implementation</h4>
         <pre><code>// Informational - requires comprehensive penetration testing
 checks.push({
   name: 'SQL Injection Protection',
@@ -89,7 +89,7 @@ checks.push({
           <th>Meaning</th>
         </tr>
         <tr class="status-info">
-          <td><span class="status-icon">ℹ️</span> info</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg></span> info</td>
           <td>Informational only. SQL injection testing requires active penetration testing which SiteSentinel does not perform.</td>
         </tr>
       </table>
@@ -109,7 +109,7 @@ checks.push({
     <section class="detail-section">
       <h2>Why SiteSentinel Doesn't Test This Actively</h2>
       <div class="warning-box">
-        <h4>⚠️ Important Limitations</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Important Limitations</h4>
         <p>Active SQL injection testing involves:</p>
         <ul>
           <li>Sending malicious payloads to form inputs and URL parameters</li>
@@ -129,7 +129,7 @@ checks.push({
     <section class="detail-section">
       <h2>Recommendations</h2>
       <div class="info-box">
-        <h4>🛡️ Protecting Against SQL Injection</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Protecting Against SQL Injection</h4>
         <ul>
           <li><strong>Parameterized Queries</strong> — Use prepared statements with bound parameters</li>
           <li><strong>ORMs</strong> — Use Object-Relational Mappers that handle escaping</li>

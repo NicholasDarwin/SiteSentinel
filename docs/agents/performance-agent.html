@@ -33,7 +33,7 @@
     <a href="../index.html" class="back-link">← Back to Analysis</a>
     
     <header class="agent-detail-header">
-      <div class="agent-icon-large">⚡</div>
+      <div class="agent-icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
       <div>
         <h1>Performance Agent</h1>
         <span class="agent-file-badge">performance.check.js</span>
@@ -58,7 +58,7 @@
         </tr>
         <tr>
           <td>Category Icon</td>
-          <td>⚡</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></td>
         </tr>
         <tr>
           <td>Source File</td>
@@ -101,14 +101,14 @@
       <h2>Data Sources</h2>
       
       <div class="code-reference">
-        <h4>📚 Libraries Used</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Libraries Used</h4>
         <ul>
           <li><code>axios</code> — HTTP client with timing information</li>
         </ul>
       </div>
 
       <div class="code-reference">
-        <h4>📥 Data Points Collected</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg> Data Points Collected</h4>
         <pre><code>const startTime = Date.now();
 const response = await axios.get(url, { timeout: 15000 });
 const responseTime = Date.now() - startTime;
@@ -157,7 +157,7 @@ const htmlSize = response.data.length;</code></pre>
       <h2>Return Value</h2>
       <pre><code>{
   category: 'Performance',
-  icon: '⚡',
+  icon: 'zap',
   score: 0-100,
   checks: [
     {

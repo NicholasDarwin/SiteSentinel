@@ -33,7 +33,7 @@
     <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
     
     <header class="check-detail-header">
-      <div class="check-icon-large medium">🌐</div>
+      <div class="check-icon-large medium"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
       <div>
         <h1>Domain Registrar Status</h1>
         <span class="severity-badge medium">Medium Severity</span>
@@ -60,7 +60,7 @@
       <h2>How Data Is Obtained</h2>
       
       <div class="code-reference">
-        <h4>📁 Source Files</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Source Files</h4>
         <ul>
           <li><code>src/checks/safety.check.js</code> — Placeholder check</li>
           <li><code>src/checks/whois.check.js</code> — Full WHOIS implementation</li>
@@ -68,12 +68,12 @@
       </div>
 
       <div class="code-reference">
-        <h4>🔧 Function in safety.check.js</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Function in safety.check.js</h4>
         <code>SafetyCheck.analyze(url)</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Current Implementation</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Current Implementation</h4>
         <pre><code>// Informational - requires WHOIS lookup
 checks.push({
   name: 'Domain Registrar Status',
@@ -84,7 +84,7 @@ checks.push({
       </div>
 
       <div class="code-reference">
-        <h4>🔗 Related Agent</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Related Agent</h4>
         <p>For full WHOIS data, see the <strong>WHOIS Agent</strong> (<code>whois.check.js</code>) which retrieves:</p>
         <ul>
           <li>Domain registrar name</li>
@@ -104,7 +104,7 @@ checks.push({
           <th>Meaning</th>
         </tr>
         <tr class="status-info">
-          <td><span class="status-icon">ℹ️</span> info</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg></span> info</td>
           <td>Informational only in the Safety section. Full WHOIS data is available through the WHOIS Agent.</td>
         </tr>
       </table>
@@ -125,19 +125,19 @@ checks.push({
       <h2>WHOIS Data Points</h2>
       <div class="info-grid">
         <div class="info-card">
-          <h4>🏢 Registrar</h4>
+          <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg> Registrar</h4>
           <p>The company where the domain was registered. Some registrars are known for lax abuse policies.</p>
         </div>
         <div class="info-card">
-          <h4>📅 Creation Date</h4>
+          <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Creation Date</h4>
           <p>When the domain was first registered. Domains less than 30 days old are higher risk for phishing.</p>
         </div>
         <div class="info-card">
-          <h4>⏰ Expiration Date</h4>
+          <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Expiration Date</h4>
           <p>When the registration expires. Domains about to expire may indicate abandonment or instability.</p>
         </div>
         <div class="info-card">
-          <h4>🔄 Updated Date</h4>
+          <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Updated Date</h4>
           <p>Last time domain records were modified. Recent changes may indicate ownership transfer.</p>
         </div>
       </div>
@@ -146,7 +146,7 @@ checks.push({
     <section class="detail-section">
       <h2>Red Flags in WHOIS Data</h2>
       <div class="warning-box">
-        <h4>🚩 Suspicious Indicators</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Suspicious Indicators</h4>
         <ul>
           <li>Domain registered within the last 7-30 days</li>
           <li>Short registration period (1 year only)</li>

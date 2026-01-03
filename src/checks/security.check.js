@@ -117,7 +117,7 @@ class SecurityCheck {
 
     return {
       category: 'Security & HTTPS',
-      icon: '🔒',
+      icon: 'lock',
       score: calculateCategoryScore(checks),
       checks
     };

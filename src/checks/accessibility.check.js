@@ -141,7 +141,7 @@ class AccessibilityCheck {
 
     return {
       category: 'Accessibility (WCAG 2.1)',
-      icon: '♿',
+      icon: 'accessibility',
       score: calculateCategoryScore(checks),
       checks
     };

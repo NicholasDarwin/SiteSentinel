@@ -18,14 +18,18 @@ class SafetyCheck {
 
       const headers = response.headers;
       const body = response.data ? String(response.data) : '';
+      const bodyLower = body.toLowerCase();
       const isHttps = url.startsWith('https://');
 
-      // 1. Malware / Phishing Indicators
-      let malwareDetected = false;
-      let detectionDetails = null;
+      // 1. Scam/Phishing Content Detection (check page content first)
+      const scamDetection = this.detectScamContent(bodyLower, url);
+      
+      // 2. Malware / Phishing Indicators
+      let malwareDetected = scamDetection.isScam;
+      let detectionDetails = scamDetection.reason;
 
       const gsApiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY;
-      if (gsApiKey) {
+      if (!malwareDetected && gsApiKey) {
         try {
           const gsPayload = {
             client: { clientId: 'sitesentinel', clientVersion: '2.0.0' },
@@ -67,7 +71,18 @@ class SafetyCheck {
         severity: 'critical'
       });
 
-      // 2. SSL Certificate Status
+      // 3. Credential Harvesting Detection
+      const credentialHarvesting = this.detectCredentialHarvesting(bodyLower, hostname);
+      checks.push({
+        name: 'Credential Harvesting',
+        status: credentialHarvesting.isHarvesting ? 'fail' : 'pass',
+        description: credentialHarvesting.isHarvesting 
+          ? credentialHarvesting.reason 
+          : 'No credential harvesting patterns detected',
+        severity: 'critical'
+      });
+
+      // 4. SSL Certificate Status
       checks.push({
         name: 'SSL Certificate Status',
         status: isHttps ? 'pass' : 'fail',
@@ -77,7 +92,7 @@ class SafetyCheck {
         severity: 'critical'
       });
 
-      // 3. Form Security
+      // 5. Form Security
       const hasForms = /<form/i.test(body);
       const hasPasswordField = /<input[^>]*type\s*=\s*["']?password/i.test(body);
       
@@ -242,7 +257,7 @@ class SafetyCheck {
 
     return {
       category: 'Safety & Threats',
-      icon: '⚠️',
+      icon: 'shield-alert',
       score,
       checks,
       malwareDetected: malwareFlag

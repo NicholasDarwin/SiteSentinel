@@ -33,7 +33,7 @@
     <a href="../index.html" class="back-link">← Back to Analysis</a>
     
     <header class="agent-detail-header">
-      <div class="agent-icon-large">📈</div>
+      <div class="agent-icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
       <div>
         <h1>SEO Agent</h1>
         <span class="agent-file-badge">seo.check.js</span>
@@ -58,7 +58,7 @@
         </tr>
         <tr>
           <td>Category Icon</td>
-          <td>📈</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></td>
         </tr>
         <tr>
           <td>Source File</td>
@@ -109,7 +109,7 @@
       <h2>Data Sources</h2>
       
       <div class="code-reference">
-        <h4>📚 Libraries Used</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Libraries Used</h4>
         <ul>
           <li><code>axios</code> — HTTP client for fetching the page</li>
           <li><code>cheerio</code> — jQuery-like HTML parsing</li>
@@ -117,7 +117,7 @@
       </div>
 
       <div class="code-reference">
-        <h4>🔍 HTML Parsing</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> HTML Parsing</h4>
         <pre><code>const cheerio = require('cheerio');
 const response = await axios.get(url);
 const $ = cheerio.load(response.data);
@@ -167,7 +167,7 @@ const headings = $('h1, h2, h3, h4, h5, h6').toArray();</code></pre>
       <h2>Return Value</h2>
       <pre><code>{
   category: 'SEO & Metadata',
-  icon: '📈',
+  icon: 'chart',
   score: 0-100,
   checks: [
     {

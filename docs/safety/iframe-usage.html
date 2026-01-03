@@ -33,7 +33,7 @@
     <a href="../safety.html" class="back-link">← Back to Safety Checks</a>
     
     <header class="check-detail-header">
-      <div class="check-icon-large medium">🖼️</div>
+      <div class="check-icon-large medium"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
       <div>
         <h1>Iframe Usage</h1>
         <span class="severity-badge medium">Medium Severity</span>
@@ -60,22 +60,22 @@
       <h2>How Data Is Obtained</h2>
       
       <div class="code-reference">
-        <h4>📁 Source File</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Source File</h4>
         <code>src/checks/safety.check.js</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔧 Function</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Function</h4>
         <code>SafetyCheck.analyze(url)</code>
       </div>
 
       <div class="code-reference">
-        <h4>📥 Input</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Input</h4>
         <p><code>response.data</code> — The HTML content returned by the target URL</p>
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Detection Logic</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Detection Logic</h4>
         <pre><code>// Count iframe elements using regex
 const iframes = response.data?.match(/&lt;iframe/gi) || [];
 
@@ -90,7 +90,7 @@ checks.push({
       </div>
 
       <div class="code-reference">
-        <h4>📚 Libraries</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Libraries</h4>
         <ul>
           <li><code>axios</code> — Fetches the page HTML</li>
           <li>Native JavaScript <code>String.match()</code> with regex</li>
@@ -107,12 +107,12 @@ checks.push({
           <th>Meaning</th>
         </tr>
         <tr class="status-pass">
-          <td><span class="status-icon">✅</span> pass</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span> pass</td>
           <td>No iframes found</td>
           <td>Page doesn't embed external content via iframes. Lower risk.</td>
         </tr>
         <tr class="status-warn">
-          <td><span class="status-icon">⚠️</span> warn</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span> warn</td>
           <td>1+ iframes detected</td>
           <td>External content is embedded. Should verify sources are trustworthy.</td>
         </tr>
@@ -147,7 +147,7 @@ checks.push({
     <section class="detail-section">
       <h2>Security Best Practices</h2>
       <div class="info-box">
-        <h4>🛡️ Securing Iframes</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Securing Iframes</h4>
         <ul>
           <li><strong>sandbox attribute</strong> — Restrict iframe capabilities</li>
           <li><strong>Only trusted sources</strong> — Only embed content from known, reputable domains</li>

@@ -33,7 +33,7 @@
     <a href="../index.html" class="back-link">← Back to Analysis</a>
     
     <header class="check-detail-header">
-      <div class="check-icon-large high">📜</div>
+      <div class="check-icon-large high"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></svg></div>
       <div>
         <h1>External Scripts</h1>
         <span class="severity-badge high">High Severity</span>
@@ -61,22 +61,22 @@
       <h2>How Data Is Obtained</h2>
       
       <div class="code-reference">
-        <h4>📁 Source File</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Source File</h4>
         <code>src/checks/safety.check.js</code>
       </div>
 
       <div class="code-reference">
-        <h4>🔧 Function</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> Function</h4>
         <code>SafetyCheck.analyze(url)</code>
       </div>
 
       <div class="code-reference">
-        <h4>📥 Input</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Input</h4>
         <p><code>response.data</code> — The HTML content returned by the target URL</p>
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Detection Logic</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Detection Logic</h4>
         <pre><code>// Count external script tags with src attribute
 const externalScripts = (response.data?.match(/&lt;script[^>]+src=/gi) || []).length;
 
@@ -91,7 +91,7 @@ checks.push({
       </div>
 
       <div class="code-reference">
-        <h4>📚 Libraries</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Libraries</h4>
         <ul>
           <li><code>axios</code> — Fetches the page HTML</li>
           <li>Native JavaScript <code>String.match()</code> with regex</li>
@@ -108,12 +108,12 @@ checks.push({
           <th>Meaning</th>
         </tr>
         <tr class="status-pass">
-          <td><span class="status-icon">✅</span> pass</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span> pass</td>
           <td>No external scripts</td>
           <td>All JavaScript is self-hosted. Maximum control over code execution.</td>
         </tr>
         <tr class="status-warn">
-          <td><span class="status-icon">⚠️</span> warn</td>
+          <td><span class="status-icon"><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span> warn</td>
           <td>1+ external scripts</td>
           <td>Third-party JavaScript detected. Verify sources are trustworthy.</td>
         </tr>
@@ -158,7 +158,7 @@ checks.push({
     <section class="detail-section">
       <h2>Security Best Practices</h2>
       <div class="info-box">
-        <h4>🛡️ Protecting Against External Script Risks</h4>
+        <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Protecting Against External Script Risks</h4>
         <ul>
           <li><strong>Subresource Integrity (SRI)</strong> — Add <code>integrity</code> attribute to verify file hasn't changed</li>
           <li><strong>Content Security Policy</strong> — Restrict which domains can serve scripts</li>

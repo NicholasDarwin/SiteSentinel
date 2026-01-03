@@ -329,7 +329,7 @@ class ExternalLinksCheck {
 
       return {
         category: 'External Links',
-        icon: '🌍',
+        icon: 'external-link',
         score: calculateCategoryScore(checks),
         checks,
         externalLinks: cleanedExternalLinks,
@@ -346,7 +346,7 @@ class ExternalLinksCheck {
 
       return {
         category: 'External Links',
-        icon: '🌍',
+        icon: 'external-link',
         score: 0,
         checks,
         externalLinks: [],

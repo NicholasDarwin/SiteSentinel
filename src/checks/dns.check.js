@@ -122,7 +122,7 @@ class DnsCheck {
 
     return {
       category: 'DNS & Domain',
-      icon: '🌐',
+      icon: 'globe',
       score: calculateCategoryScore(checks),
       checks
     };

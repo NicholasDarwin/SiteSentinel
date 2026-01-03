@@ -66,15 +66,15 @@ router.post('/analyze', async (req, res) => {
     logger.debug('Starting parallel checks execution');
     // Run all checks in parallel for better performance
     const [security, dns, performance, seo, accessibility, safety, linkAnalysis, externalLinks, whois] = await Promise.all([
-      safeCheck(new SecurityCheck().analyze(validatedUrl), 'Security & HTTPS', '🔒'),
-      safeCheck(new DnsCheck().analyze(validatedUrl), 'DNS & Domain', '🌐'),
-      safeCheck(new PerformanceCheck().analyze(validatedUrl), 'Performance', '⚡'),
-      safeCheck(new SeoCheck().analyze(validatedUrl), 'SEO & Meta', '📱'),
-      safeCheck(new AccessibilityCheck().analyze(validatedUrl), 'Accessibility', '♿'),
-      safeCheck(new SafetyCheck().analyze(validatedUrl), 'Safety & Threats', '⚠️'),
-      safeCheck(new LinkAnalysisCheck().analyze(validatedUrl), 'Link Analysis', '🔗'),
-      safeCheck(new ExternalLinksCheck().analyze(validatedUrl), 'External Links', '🌍'),
-      safeCheck(new WhoisCheck().analyze(validatedUrl), 'WHOIS & Domain Info', '📋')
+      safeCheck(new SecurityCheck().analyze(validatedUrl), 'Security & HTTPS', 'lock'),
+      safeCheck(new DnsCheck().analyze(validatedUrl), 'DNS & Domain', 'globe'),
+      safeCheck(new PerformanceCheck().analyze(validatedUrl), 'Performance', 'zap'),
+      safeCheck(new SeoCheck().analyze(validatedUrl), 'SEO & Meta', 'bar-chart'),
+      safeCheck(new AccessibilityCheck().analyze(validatedUrl), 'Accessibility', 'accessibility'),
+      safeCheck(new SafetyCheck().analyze(validatedUrl), 'Safety & Threats', 'shield-alert'),
+      safeCheck(new LinkAnalysisCheck().analyze(validatedUrl), 'Link Analysis', 'link'),
+      safeCheck(new ExternalLinksCheck().analyze(validatedUrl), 'External Links', 'external-link'),
+      safeCheck(new WhoisCheck().analyze(validatedUrl), 'WHOIS & Domain Info', 'file-text')
     ]);
     logger.debug('All parallel checks completed');
 
@@ -155,7 +155,7 @@ router.post('/analyze', async (req, res) => {
       },
       categories: [{
         category: 'Analysis Error',
-        icon: '❌',
+        icon: 'alert-circle',
         score: 0,
         checks: [{
           name: 'Error',

@@ -33,7 +33,7 @@
     <a href="../index.html" class="back-link">← Back to Analysis</a>
     
     <header class="agent-detail-header">
-      <div class="agent-icon-large">🌍</div>
+      <div class="agent-icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
       <div>
         <h1>DNS & Domain Agent</h1>
         <span class="agent-file-badge">dns.check.js</span>
@@ -58,7 +58,7 @@
         </tr>
         <tr>
           <td>Category Icon</td>
-          <td>🌍</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></td>
         </tr>
         <tr>
           <td>Source File</td>
@@ -101,7 +101,7 @@
       <h2>Data Sources</h2>
       
       <div class="code-reference">
-        <h4>📚 Libraries Used</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Libraries Used</h4>
         <ul>
           <li><code>dns</code> — Node.js built-in DNS module</li>
           <li><code>dns.promises</code> — Promise-based DNS lookups</li>
@@ -109,7 +109,7 @@
       </div>
 
       <div class="code-reference">
-        <h4>🔍 DNS Query Types</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> DNS Query Types</h4>
         <pre><code>const dns = require('dns').promises;
 
 // A records (IPv4)
@@ -147,7 +147,7 @@ const dmarcRecords = await dns.resolveTxt(`_dmarc.${hostname}`);</code></pre>
       <h2>Return Value</h2>
       <pre><code>{
   category: 'DNS & Domain',
-  icon: '🌍',
+  icon: 'globe',
   score: 0-100,
   checks: [
     {

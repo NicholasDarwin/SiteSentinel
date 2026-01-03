@@ -94,7 +94,7 @@ class PerformanceCheck {
 
     return {
       category: 'Performance',
-      icon: '⚡',
+      icon: 'zap',
       score: calculateCategoryScore(checks),
       checks
     };

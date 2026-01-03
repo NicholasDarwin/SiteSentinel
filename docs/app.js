@@ -296,7 +296,7 @@ class SiteSentinelApp {
       <div class="category-body">
         ${importantChecks.length > 0 ? `
           <div class="checks-section important-checks">
-            <div class="section-label">🔑 Key Checks</div>
+            <div class="section-label"><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Key Checks</div>
             <ul class="check-list">
               ${importantChecks.map(check => this.createCheckItem(check, true)).join('')}
             </ul>
@@ -305,7 +305,7 @@ class SiteSentinelApp {
         ${otherChecks.length > 0 ? `
           <div class="checks-section other-checks ${importantChecks.length > 0 ? 'collapsed' : ''}">
             <div class="section-label section-label-toggle" onclick="this.parentElement.classList.toggle('collapsed')">
-              📋 Additional Checks <span class="toggle-icon">▼</span>
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Additional Checks <span class="toggle-icon">▼</span>
             </div>
             <ul class="check-list">
               ${otherChecks.map(check => this.createCheckItem(check, false)).join('')}
@@ -351,15 +351,15 @@ class SiteSentinelApp {
 
   getLinkStatusIcon(status) {
     const icons = {
-      'Safe': '✅',
-      'Warning': '⚠️',
-      'Unsafe': '🚨',
-      'Broken': '❌',
-      'Unreachable': '⛔',
-      'Unknown': '❓',
-      'Not Scored': '➖'
+      'Safe': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+      'Warning': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+      'Unsafe': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+      'Broken': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+      'Unreachable': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>',
+      'Unknown': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01"/></svg>',
+      'Not Scored': '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>'
     };
-    return icons[status] || '🔗';
+    return icons[status] || '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
   }
 
   getLinkStatusClass(status) {
@@ -425,11 +425,11 @@ class SiteSentinelApp {
 
   getStatusIcon(status) {
     const icons = {
-      pass: '✅',
-      warn: '⚠️',
-      info: 'ℹ️',
-      fail: '❌',
-      error: '🔴'
+      pass: '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+      warn: '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+      info: '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>',
+      fail: '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+      error: '<svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6m0-6l6 6"/></svg>'
     };
     return icons[status] || '•';
   }

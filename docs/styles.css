@@ -2679,3 +2679,87 @@ body {
     align-self: center;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   SVG ICON STYLES
+   ───────────────────────────────────────────────────────────── */
+
+.status-svg {
+  width: 1.2em;
+  height: 1.2em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.check-icon .status-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.link-icon .status-svg {
+  width: 16px;
+  height: 16px;
+}
+
+.agent-card-icon svg {
+  width: 40px;
+  height: 40px;
+  stroke: currentColor;
+}
+
+.hero-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.section-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.result-icon .status-svg {
+  width: 48px;
+  height: 48px;
+}
+
+.check-icon-large svg {
+  width: 48px;
+  height: 48px;
+}
+
+.agent-icon-large svg {
+  width: 64px;
+  height: 64px;
+}
+
+/* Status-specific icon colors */
+.check-item .check-icon .status-svg {
+  stroke-width: 2.5;
+}
+
+.check-item .check-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-icon svg {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+}
+

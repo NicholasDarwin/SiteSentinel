@@ -176,7 +176,7 @@ class LinkAnalysisCheck {
 
       return {
         category: 'Link Analysis',
-        icon: '🔗',
+        icon: 'link',
         score: calculateCategoryScore(checks),
         checks,
         suspiciousRedirectsDetected: suspiciousLinks.length > 0
@@ -191,7 +191,7 @@ class LinkAnalysisCheck {
 
       return {
         category: 'Link Analysis',
-        icon: '🔗',
+        icon: 'link',
         score: 0,
         checks
       };

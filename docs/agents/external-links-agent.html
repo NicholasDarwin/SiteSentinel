@@ -33,7 +33,7 @@
     <a href="../index.html" class="back-link">← Back to Analysis</a>
     
     <header class="agent-detail-header">
-      <div class="agent-icon-large">🔗</div>
+      <div class="agent-icon-large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
       <div>
         <h1>External Links Agent</h1>
         <span class="agent-file-badge">external-links.check.js</span>
@@ -58,7 +58,7 @@
         </tr>
         <tr>
           <td>Category Icon</td>
-          <td>🔗</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></td>
         </tr>
         <tr>
           <td>Source Files</td>
@@ -101,7 +101,7 @@
       <h2>Data Sources</h2>
       
       <div class="code-reference">
-        <h4>📚 Libraries Used</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Libraries Used</h4>
         <ul>
           <li><code>axios</code> — HTTP client for fetching page and checking links</li>
           <li><code>cheerio</code> — HTML parsing to extract links</li>
@@ -109,7 +109,7 @@
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Link Discovery</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Link Discovery</h4>
         <pre><code>const cheerio = require('cheerio');
 const $ = cheerio.load(response.data);
 const baseHostname = new URL(url).hostname;
@@ -134,7 +134,7 @@ $('a[href]').each((i, el) => {
       </div>
 
       <div class="code-reference">
-        <h4>🔍 Link Validation</h4>
+        <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Link Validation</h4>
         <pre><code>// Check each external link
 for (const link of externalLinks) {
   try {
@@ -162,27 +162,27 @@ for (const link of externalLinks) {
         </tr>
         <tr class="status-pass">
           <td>Safe</td>
-          <td>✅</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></td>
           <td>Link is reachable and passes safety checks</td>
         </tr>
         <tr class="status-warn">
           <td>Warning</td>
-          <td>⚠️</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></td>
           <td>Link works but has potential concerns</td>
         </tr>
         <tr class="status-fail">
           <td>Unsafe</td>
-          <td>🚨</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6m0-6l6 6"/></svg></td>
           <td>Link points to a potentially dangerous site</td>
         </tr>
         <tr class="status-fail">
           <td>Broken</td>
-          <td>❌</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></td>
           <td>Link returns 404 or other error</td>
         </tr>
         <tr class="status-error">
           <td>Unreachable</td>
-          <td>⛔</td>
+          <td><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></td>
           <td>Link destination could not be contacted</td>
         </tr>
       </table>
@@ -192,7 +192,7 @@ for (const link of externalLinks) {
       <h2>Return Value</h2>
       <pre><code>{
   category: 'External Links',
-  icon: '🔗',
+  icon: 'link',
   score: 0-100,
   checks: [
     {

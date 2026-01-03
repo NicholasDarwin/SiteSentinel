@@ -302,7 +302,7 @@ class WhoisCheck {
 
     return {
       category: 'WHOIS & Domain Info',
-      icon: '📋',
+      icon: 'file-text',
       score: calculateCategoryScore(checks),
       checks
     };
