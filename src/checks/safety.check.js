@@ -8,6 +8,182 @@ const logger = require('../utils/logger.util');
 
 class SafetyCheck {
   /**
+   * Detect deceptive download page patterns (malware distribution)
+   * @param {string} bodyLower - Lowercase page content
+   * @param {string} url - The URL being analyzed
+   * @param {string} hostname - The hostname
+   * @returns {{ isDeceptive: boolean, reason: string, riskScore: number, signals: string[] }}
+   */
+  detectDeceptiveDownload(bodyLower, url, hostname) {
+    try {
+      const signals = [];
+      let riskScore = 0;
+
+      // === HIGH-RISK DOWNLOAD LANGUAGE PATTERNS ===
+      const deceptiveDownloadPhrases = [
+        { pattern: /your\s+(free\s+)?download\s+is\s+ready/i, weight: 30, signal: 'Deceptive "download ready" messaging' },
+        { pattern: /complete\s+download/i, weight: 25, signal: 'Generic "complete download" prompt' },
+        { pattern: /download\s+now/i, weight: 15, signal: '"Download Now" call-to-action' },
+        { pattern: /setup\s+file/i, weight: 25, signal: 'Generic "setup file" reference' },
+        { pattern: /click\s+(here\s+)?to\s+download/i, weight: 20, signal: 'Click-to-download prompt' },
+        { pattern: /start\s+download/i, weight: 20, signal: '"Start download" button' },
+        { pattern: /downloading\s+will\s+start/i, weight: 25, signal: 'Auto-download messaging' },
+        { pattern: /file\s+is\s+ready/i, weight: 25, signal: 'Generic "file ready" messaging' },
+        { pattern: /install(er)?\s+file/i, weight: 25, signal: 'Generic "installer" reference' },
+        { pattern: /free\s+installer/i, weight: 30, signal: 'Free installer claim' },
+        { pattern: /get\s+your\s+(free\s+)?file/i, weight: 25, signal: 'Generic file delivery language' },
+        { pattern: /download\s+manager/i, weight: 20, signal: 'Download manager reference' },
+        { pattern: /fast(er)?\s+download/i, weight: 20, signal: 'Fast download claim' },
+        { pattern: /secure\s+download/i, weight: 15, signal: 'False security claim on download' },
+        { pattern: /direct\s+download/i, weight: 15, signal: 'Direct download claim' },
+        { pattern: /one\s+click\s+download/i, weight: 20, signal: 'One-click download claim' }
+      ];
+
+      for (const { pattern, weight, signal } of deceptiveDownloadPhrases) {
+        if (pattern.test(bodyLower)) {
+          riskScore += weight;
+          signals.push(signal);
+        }
+      }
+
+      // === MISSING SOFTWARE METADATA (legitimate software always has this) ===
+      const hasPublisher = /publisher|developed\s+by|created\s+by|made\s+by|by\s+[A-Z][a-z]+\s+(Inc|LLC|Ltd|Corp)/i.test(bodyLower);
+      const hasVersion = /version\s*[\d.]+|v[\d.]+|release\s+[\d.]+/i.test(bodyLower);
+      const hasChecksum = /(sha256|sha1|md5|checksum)\s*:?\s*[a-f0-9]{32,}/i.test(bodyLower);
+      const hasLicense = /(license|eula|terms\s+of\s+(service|use)|privacy\s+policy|copyright)/i.test(bodyLower);
+      const hasProductName = /<title>[^<]*\b(software|app|application|tool|program)\b[^<]*<\/title>/i.test(bodyLower);
+
+      if (!hasPublisher && signals.length > 0) {
+        riskScore += 20;
+        signals.push('No software publisher/vendor identified');
+      }
+      if (!hasVersion && signals.length > 0) {
+        riskScore += 15;
+        signals.push('No software version information');
+      }
+      if (!hasLicense && signals.length > 0) {
+        riskScore += 15;
+        signals.push('No license or legal information');
+      }
+
+      // === URL PATH ANALYSIS ===
+      const urlPath = new URL(url).pathname;
+      
+      // Long hex/hash-like paths are extremely suspicious
+      const hashPattern = /\/[a-f0-9]{24,}$/i;
+      const longRandomPath = /\/[a-zA-Z0-9]{32,}$/;
+      
+      if (hashPattern.test(urlPath)) {
+        riskScore += 35;
+        signals.push('Hash-like obfuscated URL path (high risk)');
+      } else if (longRandomPath.test(urlPath)) {
+        riskScore += 30;
+        signals.push('Long random/obfuscated URL path');
+      }
+
+      // Short UUID-like paths also suspicious in download context
+      const uuidPattern = /\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i;
+      if (uuidPattern.test(urlPath) && signals.length > 0) {
+        riskScore += 15;
+        signals.push('UUID-based tracking URL');
+      }
+
+      // === DOMAIN ANALYSIS ===
+      const suspiciousDownloadDomains = [
+        'getflux', 'download', 'file', 'soft', 'installer', 'setup', 
+        'get', 'grab', 'fetch', 'dlfile', 'filehost', 'upload',
+        'mediafire', '4shared', 'zippyshare', 'uploadhaven'
+      ];
+      
+      const domainLower = hostname.toLowerCase();
+      for (const keyword of suspiciousDownloadDomains) {
+        if (domainLower.includes(keyword)) {
+          riskScore += 20;
+          signals.push(`Domain contains "${keyword}" - common in file-dropper networks`);
+          break;
+        }
+      }
+
+      // Short-lived/burner domain patterns
+      const burnerTLDs = ['.xyz', '.top', '.club', '.online', '.site', '.icu', '.buzz', '.fun'];
+      for (const tld of burnerTLDs) {
+        if (hostname.endsWith(tld)) {
+          riskScore += 15;
+          signals.push(`Suspicious TLD "${tld}" common with disposable domains`);
+          break;
+        }
+      }
+
+      // === EXECUTABLE DOWNLOAD DETECTION ===
+      const executablePatterns = [
+        /href\s*=\s*["'][^"']*\.(exe|msi|dmg|pkg|deb|rpm|appimage|bat|cmd|ps1|vbs|js)["']/i,
+        /download\s*=\s*["'][^"']*\.(exe|msi|dmg|pkg|bat|cmd)["']/i,
+        /\.exe\b/i,
+        /\.msi\b/i,
+        /\.dmg\b/i
+      ];
+
+      let hasExecutable = false;
+      for (const pattern of executablePatterns) {
+        if (pattern.test(bodyLower)) {
+          hasExecutable = true;
+          break;
+        }
+      }
+
+      if (hasExecutable && signals.length > 0) {
+        riskScore += 25;
+        signals.push('Executable file download detected');
+      }
+
+      // === FAKE DOWNLOAD GATING PATTERNS ===
+      const gatingPatterns = [
+        { pattern: /step\s*1.*step\s*2/is, signal: 'Fake multi-step download process' },
+        { pattern: /waiting.*seconds?.*download/i, signal: 'Fake countdown timer' },
+        { pattern: /please\s+wait.*download/i, signal: 'Fake waiting prompt' },
+        { pattern: /generating.*link/i, signal: 'Fake link generation' },
+        { pattern: /preparing.*download/i, signal: 'Fake preparation message' }
+      ];
+
+      for (const { pattern, signal } of gatingPatterns) {
+        if (pattern.test(bodyLower)) {
+          riskScore += 20;
+          signals.push(signal);
+        }
+      }
+
+      // === PAGE CONTENT ANALYSIS ===
+      // Check for minimal page content (malware pages are often sparse)
+      const textContent = bodyLower.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      const wordCount = textContent.split(' ').filter(w => w.length > 2).length;
+      
+      if (wordCount < 50 && signals.length >= 2) {
+        riskScore += 15;
+        signals.push('Sparse page content typical of malware distribution');
+      }
+
+      // === DETERMINE FINAL CLASSIFICATION ===
+      const isDeceptive = riskScore >= 50;
+      
+      let reason = '';
+      if (isDeceptive) {
+        if (riskScore >= 80) {
+          reason = 'DANGER: High-confidence malware distribution page detected';
+        } else if (riskScore >= 65) {
+          reason = 'WARNING: Likely deceptive download page - exercise extreme caution';
+        } else {
+          reason = 'WARNING: Suspicious download page with multiple red flags';
+        }
+      }
+
+      return { isDeceptive, reason, riskScore, signals };
+    } catch (err) {
+      logger.error('Error in detectDeceptiveDownload:', err.message);
+      return { isDeceptive: false, reason: '', riskScore: 0, signals: [] };
+    }
+  }
+
+  /**
    * Detect scam/phishing content patterns in page body
    * @param {string} bodyLower - Lowercase page content
    * @param {string} url - The URL being analyzed
@@ -117,7 +293,15 @@ class SafetyCheck {
       const bodyLower = body.toLowerCase();
       const isHttps = url.startsWith('https://');
 
-      // 1. Scam/Phishing Content Detection (check page content first) - Isolated with try/catch
+      // 1. Deceptive Download / Malware Distribution Detection (HIGHEST PRIORITY)
+      let deceptiveDownload = { isDeceptive: false, reason: '', riskScore: 0, signals: [] };
+      try {
+        deceptiveDownload = this.detectDeceptiveDownload(bodyLower, url, hostname);
+      } catch (ddErr) {
+        logger.error('Deceptive download detection failed:', ddErr.message);
+      }
+
+      // 2. Scam/Phishing Content Detection (check page content first) - Isolated with try/catch
       let scamDetection = { isScam: false, reason: '' };
       try {
         scamDetection = this.detectScamContent(bodyLower, url);
@@ -126,9 +310,10 @@ class SafetyCheck {
         // Continue with empty result rather than failing entire analysis
       }
       
-      // 2. Malware / Phishing Indicators - Isolated with try/catch
-      let malwareDetected = scamDetection.isScam;
-      let detectionDetails = scamDetection.reason;
+      // 3. Malware / Phishing Indicators - Combine all detection methods
+      let malwareDetected = deceptiveDownload.isDeceptive || scamDetection.isScam;
+      let detectionDetails = deceptiveDownload.reason || scamDetection.reason;
+      let detectionSignals = deceptiveDownload.signals || [];
 
       // Try Google Safe Browsing API if available
       const gsApiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY;
@@ -180,15 +365,40 @@ class SafetyCheck {
         }
       }
 
+      // Build comprehensive description for malware check
+      let malwareDescription = 'No malware or phishing indicators detected';
+      if (malwareDetected) {
+        malwareDescription = detectionDetails;
+        if (detectionSignals.length > 0) {
+          malwareDescription += ` | Signals: ${detectionSignals.slice(0, 5).join('; ')}`;
+        }
+      }
+
       checks.push({
         name: 'Malware/Phishing Indicators',
         status: malwareDetected ? 'fail' : 'pass',
-        description: malwareDetected ? detectionDetails : 'No malware or phishing indicators detected',
+        description: malwareDescription,
         severity: 'critical',
-        explanation: 'This check scans for known malware signatures, phishing patterns, and scam content using multiple detection methods including Google Safe Browsing API.'
+        explanation: 'This check scans for known malware signatures, phishing patterns, deceptive download pages, and scam content using multiple detection methods including behavioral analysis and Google Safe Browsing API.',
+        riskScore: deceptiveDownload.riskScore,
+        signals: detectionSignals
       });
 
-      // 3. Credential Harvesting Detection - Isolated with try/catch
+      // 4. Deceptive Download Page (separate detailed check)
+      if (deceptiveDownload.isDeceptive) {
+        checks.push({
+          name: 'Deceptive Download Page',
+          status: 'fail',
+          description: `MALWARE DISTRIBUTION: This page exhibits ${detectionSignals.length} suspicious signals typical of malware/PUP distribution`,
+          severity: 'critical',
+          explanation: 'This check detects pages that use social engineering to trick users into downloading malicious software. Common indicators include: generic download prompts, missing publisher info, obfuscated URLs, and executable delivery without transparency.',
+          signals: detectionSignals,
+          riskScore: deceptiveDownload.riskScore,
+          classification: deceptiveDownload.riskScore >= 80 ? 'Malicious' : 'Highly Suspicious'
+        });
+      }
+
+      // 5. Credential Harvesting Detection - Isolated with try/catch
       let credentialHarvesting = { isHarvesting: false, reason: '' };
       try {
         credentialHarvesting = this.detectCredentialHarvesting(bodyLower, hostname);
@@ -434,16 +644,21 @@ class SafetyCheck {
     try {
       const urlLower = url.toLowerCase();
       
-      // Check for obfuscated payloads
+      // Check for obfuscated payloads (base64-like strings)
       if (/\/[A-Za-z0-9+/]{50,}={0,2}($|\?|\/)/i.test(urlLower)) return true;
       
-      // Suspicious patterns
-      if (/[?&](click_id|cid|zoneid|landing_id)/i.test(urlLower)) return true;
+      // Check for long hex strings in URL path (common in malware distribution)
+      if (/\/[a-f0-9]{24,}($|\?|\/)/i.test(urlLower)) return true;
+      
+      // Suspicious tracking/affiliate patterns
+      if (/[?&](click_id|cid|zoneid|landing_id|aff_id|campaign_id)/i.test(urlLower)) return true;
+      
+      // IP address in URL (suspicious)
       if (/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(urlLower)) return true;
       
-      // Typosquatting
-      const typos = [/goog+le/i, /faceb+ook/i, /amazo+n/i, /paypa+l/i];
-      const legit = ['google.com', 'facebook.com', 'amazon.com', 'paypal.com'];
+      // Typosquatting detection
+      const typos = [/goog+le/i, /faceb+ook/i, /amazo+n/i, /paypa+l/i, /micros+oft/i, /app+le/i];
+      const legit = ['google.com', 'facebook.com', 'amazon.com', 'paypal.com', 'microsoft.com', 'apple.com'];
       for (const pattern of typos) {
         if (pattern.test(hostname) && !legit.some(d => hostname.includes(d))) return true;
       }
@@ -457,12 +672,47 @@ class SafetyCheck {
 
   checkDomainReputation(hostname, url) {
     try {
-      const suspicious = ['.click', '.download', '.tk', '.ml', '.ga', '.cf', '.top'];
-      for (const tld of suspicious) {
-        if (hostname.endsWith(tld)) {
-          return { isSuspicious: true, reason: `Suspicious ${tld} domain - commonly used for scams` };
+      const hostLower = hostname.toLowerCase();
+      
+      // Suspicious TLDs commonly used for scams and malware
+      const suspiciousTLDs = [
+        '.click', '.download', '.tk', '.ml', '.ga', '.cf', '.top',
+        '.xyz', '.icu', '.buzz', '.fun', '.monster', '.cam', '.loan',
+        '.work', '.date', '.racing', '.win', '.stream', '.gdn'
+      ];
+      
+      for (const tld of suspiciousTLDs) {
+        if (hostLower.endsWith(tld)) {
+          return { isSuspicious: true, reason: `Suspicious ${tld} domain - commonly used for scams/malware` };
         }
       }
+      
+      // Known file-dropper / malware distribution domain patterns
+      const malwareDistributionPatterns = [
+        { pattern: /getflux/i, reason: 'Domain associated with software bundling/PUP distribution' },
+        { pattern: /^(get|grab|fetch|dl|download|file|soft|free)[a-z]*\./i, reason: 'Generic file delivery domain pattern' },
+        { pattern: /install(er)?s?[.-]/i, reason: 'Generic installer delivery domain' },
+        { pattern: /(setup|patch|crack|keygen|serial)[.-]/i, reason: 'Potentially unwanted software distribution domain' },
+        { pattern: /\d{2,}[a-z]*\.(com|net|org)$/i, reason: 'Numeric domain pattern common in malware campaigns' }
+      ];
+      
+      for (const { pattern, reason } of malwareDistributionPatterns) {
+        if (pattern.test(hostLower)) {
+          return { isSuspicious: true, reason };
+        }
+      }
+      
+      // Check URL path for suspicious patterns
+      try {
+        const urlPath = new URL(url).pathname;
+        // Long random/hash paths are suspicious
+        if (/\/[a-f0-9]{32,}$/i.test(urlPath)) {
+          return { isSuspicious: true, reason: 'Hash-like URL path typical of malware distribution tracking' };
+        }
+      } catch (e) {
+        // Ignore URL parsing errors
+      }
+      
       return { isSuspicious: false };
     } catch (err) {
       logger.error('Error in checkDomainReputation:', err.message);
