@@ -96,8 +96,8 @@ router.post('/analyze', async (req, res) => {
       logger.debug(`Category ${idx}:`, { hasScore: cat && 'score' in cat, type: typeof cat, keys: cat ? Object.keys(cat) : 'null' });
     });
 
-    // Filter to only valid categories
-    const validCategories = categories.filter(cat => cat && typeof cat === 'object' && 'score' in cat);
+    // Filter to only valid categories (those that actually ran)
+    const validCategories = categories.filter(cat => cat && typeof cat === 'object');
 
     // Ensure we have at least some categories
     if (validCategories.length === 0) {
@@ -108,8 +108,10 @@ router.post('/analyze', async (req, res) => {
       });
     }
 
-    // Calculate overall score
-    let overallScore = calculateOverallScore(validCategories);
+    // Calculate overall score with breakdown
+    const scoreResult = calculateOverallScore(validCategories);
+    let overallScore = scoreResult.score;
+    const scoreBreakdown = scoreResult.breakdown;
 
     // If any category reports a confirmed malware detection, force overall score to 0
     const malwareDetected = validCategories.some(cat => cat && cat.malwareDetected === true);
@@ -133,7 +135,8 @@ router.post('/analyze', async (req, res) => {
       overall: {
         score: overallScore,
         label: scoreLabel,
-        color: scoreColor
+        color: scoreColor,
+        breakdown: scoreBreakdown
       },
       categories: validCategories
     };

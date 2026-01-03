@@ -256,6 +256,21 @@ class ExternalLinksCheck {
         } catch { return false; }
       });
 
+      // Calculate proper link metrics
+      const totalLinksFound = allLinks.length;
+      const uniqueUrls = cleanedExternalLinks.length;
+      
+      // Get unique domains
+      const domains = cleanedExternalLinks.map(link => {
+        try {
+          return new URL(link).hostname;
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
+      
+      const uniqueDomains = [...new Set(domains)];
+
       // Score each external link (limit to first 50 to avoid timeout)
       const linksToScore = cleanedExternalLinks.slice(0, 50);
       const scoredLinks = await Promise.all(
@@ -278,13 +293,21 @@ class ExternalLinksCheck {
         issues: []
       }));
 
+      // Link count check with clear metrics
       checks.push({
         name: 'External Links Detected',
         status: cleanedExternalLinks.length === 0 ? 'info' : 'pass',
         description: cleanedExternalLinks.length === 0 
           ? 'No external links found on this page'
-          : `Found ${cleanedExternalLinks.length} unique external link${cleanedExternalLinks.length !== 1 ? 's' : ''}`,
-        severity: 'low'
+          : `Found ${uniqueUrls} unique external URLs pointing to ${uniqueDomains.length} unique domains`,
+        severity: 'low',
+        explanation: 'External links connect your site to other resources on the web.',
+        details: {
+          totalLinksFound: totalLinksFound,
+          uniqueUrls: uniqueUrls,
+          uniqueDomains: uniqueDomains.length,
+          formula: 'Total links found → deduplicated to unique URLs → grouped by domain'
+        }
       });
 
       if (redirectLinks.length > 0) {
@@ -292,26 +315,52 @@ class ExternalLinksCheck {
           name: 'Redirect Triggered External Destinations',
           status: 'warn',
           description: `Detected ${redirectLinks.length} external navigation${redirectLinks.length !== 1 ? 's' : ''} initiated via scripted redirects / window.location changes`,
-          severity: 'medium'
+          severity: 'medium',
+          explanation: 'These links redirect users programmatically rather than via standard anchor tags.'
         });
       }
 
-      // Check link diversity
-      const domains = cleanedExternalLinks.map(link => {
-        try {
-          return new URL(link).hostname;
-        } catch {
-          return null;
-        }
-      }).filter(Boolean);
-      
-      const uniqueDomains = [...new Set(domains)];
-      
+      // External domains check with explanation
       checks.push({
         name: 'External Domains',
         status: 'info',
         description: `Links point to ${uniqueDomains.length} unique external domain${uniqueDomains.length !== 1 ? 's' : ''}`,
-        severity: 'low'
+        severity: 'low',
+        explanation: 'The number of different external websites your page links to.',
+        details: {
+          domains: uniqueDomains.slice(0, 20) // Show first 20 domains
+        }
+      });
+
+      // Calculate link density properly
+      // Link density = external links / total content elements (paragraphs + divs with text)
+      const contentElements = $('p, article, section').length || 1;
+      const linkDensityRatio = uniqueUrls / contentElements;
+      const linkDensityPercent = Math.min(linkDensityRatio * 100, 100); // Cap display at 100%
+      
+      let densityStatus = 'pass';
+      let densityDesc = `Link density: ${linkDensityPercent.toFixed(1)}% (${uniqueUrls} links / ${contentElements} content blocks)`;
+      
+      if (linkDensityRatio > 2) {
+        densityStatus = 'warn';
+        densityDesc = `High link density: ${linkDensityRatio.toFixed(1)} links per content block - may indicate link spam`;
+      } else if (linkDensityRatio > 1) {
+        densityStatus = 'info';
+        densityDesc = `Moderate link density: ${linkDensityRatio.toFixed(1)} links per content block`;
+      }
+      
+      checks.push({
+        name: 'External Link Density',
+        status: densityStatus,
+        description: densityDesc,
+        severity: 'medium',
+        explanation: 'Link density measures external links relative to content. Formula: (unique external URLs) / (content elements like paragraphs, articles, sections). High density may indicate spam.',
+        details: {
+          uniqueExternalUrls: uniqueUrls,
+          contentElements: contentElements,
+          ratio: linkDensityRatio.toFixed(2),
+          formula: 'unique_external_urls / content_elements'
+        }
       });
 
       // Security check on scored links
@@ -321,33 +370,46 @@ class ExternalLinksCheck {
           name: 'Potentially Unsafe External Links',
           status: lowScoreLinks.length > 3 ? 'fail' : 'warn',
           description: `${lowScoreLinks.length} external link${lowScoreLinks.length !== 1 ? 's have' : ' has'} security concerns`,
-          severity: 'high'
+          severity: 'high',
+          explanation: 'These links may point to suspicious domains, use unsafe protocols, or have other security issues.'
         });
       }
 
       const allScoredLinks = [...scoredLinks, ...remainingLinks];
+      const score = calculateCategoryScore(checks);
 
       return {
         category: 'External Links',
         icon: 'external-link',
-        score: calculateCategoryScore(checks),
+        score: score,
+        status: score === null ? 'unavailable' : 'available',
         checks,
         externalLinks: cleanedExternalLinks,
         externalDomains: uniqueDomains,
-        scoredLinks: allScoredLinks
+        scoredLinks: allScoredLinks,
+        metrics: {
+          totalLinksFound,
+          uniqueUrls,
+          uniqueDomains: uniqueDomains.length,
+          linkDensity: linkDensityRatio.toFixed(2)
+        }
       };
     } catch (error) {
       checks.push({
         name: 'External Links Analysis Error',
         status: 'error',
-        description: `Error analyzing external links: ${error.message}`,
-        severity: 'medium'
+        description: 'External links analysis unavailable',
+        severity: 'medium',
+        explanation: `An error occurred: ${error.message}`
       });
 
+      const score = calculateCategoryScore(checks);
+      
       return {
         category: 'External Links',
         icon: 'external-link',
-        score: 0,
+        score: score,
+        status: score === null ? 'unavailable' : 'available',
         checks,
         externalLinks: [],
         externalDomains: [],

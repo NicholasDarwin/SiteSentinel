@@ -141,8 +141,9 @@ class LinkAnalysisCheck {
       checks.push({
         name: 'External Links Found',
         status: links.length === 0 ? 'info' : 'pass',
-        description: `${links.length} external links detected on page`,
-        severity: 'low'
+        description: `${links.length} total links detected on page (${externalLinks.length} external)`,
+        severity: 'low',
+        explanation: 'Links connect pages together. External links point to other websites.'
       });
 
       checks.push({
@@ -151,7 +152,8 @@ class LinkAnalysisCheck {
         description: redirectLinks.length > 0 
           ? `${redirectLinks.length} redirect/shortened links detected` 
           : 'No suspicious redirect links found',
-        severity: 'medium'
+        severity: 'medium',
+        explanation: 'URL shorteners and redirects can mask the true destination of links.'
       });
 
       checks.push({
@@ -160,24 +162,49 @@ class LinkAnalysisCheck {
         description: suspiciousLinks.length > 0
           ? `${suspiciousLinks.length} links redirect to suspicious domains`
           : 'No malicious redirects detected',
-        severity: 'critical'
+        severity: 'critical',
+        explanation: 'Links that redirect to known malicious or suspicious domains may indicate phishing or scam activity.'
       });
 
-      // Flag if too many external links relative to content
-      const externalLinkRatio = links.length / ($ ('p').length + $('div').length + 1);
+      // Calculate external link density properly
+      // Density = external links / total content elements
+      const contentElements = $('p, article, section, div:has(> p)').length || 1;
+      const externalLinkRatio = externalLinks.length / contentElements;
+      
+      // Express as a ratio, not a percentage > 100
+      let densityStatus = 'pass';
+      let densityDesc = `External link ratio: ${externalLinkRatio.toFixed(2)} links per content block`;
+      
+      if (externalLinkRatio > 2) {
+        densityStatus = 'warn';
+        densityDesc = `High external link density: ${externalLinkRatio.toFixed(2)} links per content block - may indicate link spam`;
+      } else if (externalLinkRatio > 1) {
+        densityStatus = 'info';
+        densityDesc = `Moderate external link density: ${externalLinkRatio.toFixed(2)} links per content block`;
+      } else if (externalLinks.length === 0) {
+        densityDesc = 'No external links detected';
+      }
+      
       checks.push({
         name: 'External Link Density',
-        status: externalLinkRatio > 0.5 ? 'warn' : 'pass',
-        description: externalLinkRatio > 0.5
-          ? `High ratio of external links (${(externalLinkRatio * 100).toFixed(1)}%)`
-          : 'External link density is normal',
-        severity: 'medium'
+        status: densityStatus,
+        description: densityDesc,
+        severity: 'medium',
+        explanation: 'Link density measures external links relative to content. Formula: external_links / content_elements. A high ratio may indicate affiliate spam or low-quality content.',
+        details: {
+          externalLinks: externalLinks.length,
+          contentElements: contentElements,
+          ratio: externalLinkRatio.toFixed(2)
+        }
       });
 
+      const score = calculateCategoryScore(checks);
+      
       return {
         category: 'Link Analysis',
         icon: 'link',
-        score: calculateCategoryScore(checks),
+        score: score,
+        status: score === null ? 'unavailable' : 'available',
         checks,
         suspiciousRedirectsDetected: suspiciousLinks.length > 0
       };
@@ -185,14 +212,18 @@ class LinkAnalysisCheck {
       checks.push({
         name: 'Link Analysis Error',
         status: 'error',
-        description: `Error analyzing links: ${error.message}`,
-        severity: 'medium'
+        description: 'Link analysis unavailable',
+        severity: 'medium',
+        explanation: `An error occurred: ${error.message}`
       });
 
+      const score = calculateCategoryScore(checks);
+      
       return {
         category: 'Link Analysis',
         icon: 'link',
-        score: 0,
+        score: score,
+        status: score === null ? 'unavailable' : 'available',
         checks
       };
     }

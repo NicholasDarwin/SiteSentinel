@@ -173,7 +173,8 @@ class SeoCheck {
         name: 'Page Title',
         status: title && title.length > 0 ? (title.length >= 30 && title.length <= 60 ? 'pass' : title.length > 2 ? 'warn' : 'fail') : 'fail',
         description: title ? `Title: "${title}" (${title.length} chars)` : 'No page title found',
-        severity: 'high'
+        severity: 'high',
+        explanation: 'Page titles appear in browser tabs and search results. Optimal length is 30-60 characters.'
       });
 
       // 2. Meta Description
@@ -182,8 +183,9 @@ class SeoCheck {
       checks.push({
         name: 'Meta Description',
         status: metaDescription ? (metaDescription.length >= 120 && metaDescription.length <= 160 ? 'pass' : 'warn') : 'warn',
-        description: metaDescription ? `Description: "${metaDescription}" (${metaDescription.length} chars)` : 'No meta description (may be loaded dynamically)',
-        severity: 'high'
+        description: metaDescription ? `Description: "${metaDescription.substring(0, 50)}..." (${metaDescription.length} chars)` : 'No meta description (may be loaded dynamically)',
+        severity: 'high',
+        explanation: 'Meta descriptions appear in search results. Optimal length is 120-160 characters.'
       });
 
       // 3. Heading Structure (H1)
@@ -193,7 +195,8 @@ class SeoCheck {
         name: 'H1 Tag Structure',
         status: h1Count === 1 ? 'pass' : h1Count > 0 ? 'warn' : 'warn',
         description: h1Count === 1 ? 'Single H1 tag found (optimal)' : h1Count > 0 ? `${h1Count} H1 tags found (should be 1)` : 'No H1 tags in static HTML (may be rendered by JavaScript)',
-        severity: 'high'
+        severity: 'high',
+        explanation: 'Each page should have exactly one H1 tag that describes the main topic of the page.'
       });
 
       // 4. Robots Meta Tag
@@ -202,7 +205,8 @@ class SeoCheck {
         name: 'Robots Meta Tag',
         status: robotsMeta ? 'pass' : 'info',
         description: robotsMeta ? `Robots: ${robotsMeta}` : 'No robots meta tag (default: index, follow)',
-        severity: 'low'
+        severity: 'low',
+        explanation: 'Robots meta tag tells search engines whether to index this page and follow its links.'
       });
 
       // 5. Canonical Tag
@@ -210,8 +214,9 @@ class SeoCheck {
       checks.push({
         name: 'Canonical Tag',
         status: canonical ? 'pass' : 'warn',
-        description: canonical ? `Canonical: ${canonical}` : 'No canonical tag (important for duplicate content)',
-        severity: 'medium'
+        description: canonical ? `Canonical: ${canonical}` : 'No canonical tag (recommended for SEO)',
+        severity: 'medium',
+        explanation: 'Canonical tags prevent duplicate content issues by specifying the preferred URL for a page.'
       });
 
       // 6. Open Graph Tags
@@ -219,9 +224,10 @@ class SeoCheck {
       const ogImage = $('meta[property="og:image"]').attr('content');
       checks.push({
         name: 'Open Graph Tags',
-        status: ogTitle && ogImage ? 'pass' : 'warn',
-        description: ogTitle && ogImage ? 'Open Graph meta tags configured' : 'Missing Open Graph tags for social sharing',
-        severity: 'medium'
+        status: ogTitle && ogImage ? 'pass' : 'info',
+        description: ogTitle && ogImage ? 'Open Graph meta tags configured' : 'Missing Open Graph tags (optional, improves social sharing)',
+        severity: 'medium',
+        explanation: 'Open Graph tags control how your content appears when shared on social media platforms.'
       });
 
       // 7. Structured Data (Schema.org)
@@ -229,19 +235,50 @@ class SeoCheck {
       checks.push({
         name: 'Structured Data (Schema.org)',
         status: hasStructuredData ? 'pass' : 'info',
-        description: hasStructuredData ? 'Structured data found' : 'No structured data detected',
-        severity: 'medium'
+        description: hasStructuredData ? 'Structured data found' : 'No structured data detected (optional)',
+        severity: 'medium',
+        explanation: 'Structured data helps search engines understand your content and can enable rich search results.'
       });
 
-      // 8. Mobile Viewport Meta
+      // 8. Mobile Viewport Meta - Enhanced detection for dynamic injection
       const viewport = $('meta[name="viewport"]').attr('content');
-      // Check if site is responsive via other indicators (og:image, responsive design patterns)
+      // Check for indicators that viewport may be dynamically injected
       const hasOgImage = !!$('meta[property="og:image"]').attr('content');
+      const hasResponsiveIndicators = $('[class*="responsive"], [class*="mobile"], [data-responsive]').length > 0;
+      const hasMediaQueries = response.data && /@media\s*\([^)]*width/i.test(response.data);
+      const isModernFramework = /react|vue|angular|next|nuxt|gatsby/i.test(response.data || '');
+      
+      // Known providers that use dynamic viewport injection
+      const hostname = new URL(url).hostname;
+      const dynamicViewportProviders = ['google.com', 'facebook.com', 'twitter.com', 'instagram.com', 'youtube.com'];
+      const isDynamicProvider = dynamicViewportProviders.some(p => hostname.includes(p));
+      
+      let viewportStatus, viewportDesc, viewportExplanation;
+      
+      if (viewport) {
+        viewportStatus = 'pass';
+        viewportDesc = `Viewport: ${viewport}`;
+        viewportExplanation = 'Mobile viewport meta tag is properly configured.';
+      } else if (isDynamicProvider || isModernFramework) {
+        viewportStatus = 'info';
+        viewportDesc = 'Viewport meta tag not in initial HTML - likely injected dynamically by JavaScript framework';
+        viewportExplanation = 'Modern JavaScript frameworks often inject the viewport tag during client-side rendering. The site is likely responsive.';
+      } else if (hasMediaQueries || hasResponsiveIndicators) {
+        viewportStatus = 'warn';
+        viewportDesc = 'No viewport meta tag, but responsive CSS detected - may be dynamically injected';
+        viewportExplanation = 'The site appears to use responsive design but viewport tag was not found in static HTML.';
+      } else {
+        viewportStatus = 'warn';
+        viewportDesc = 'No viewport meta tag detected - site may not be mobile-friendly';
+        viewportExplanation = 'Consider adding <meta name="viewport" content="width=device-width, initial-scale=1"> for mobile compatibility.';
+      }
+      
       checks.push({
         name: 'Mobile Viewport',
-        status: viewport ? 'pass' : (hasOgImage ? 'warn' : 'warn'),
-        description: viewport ? `Viewport: ${viewport}` : 'No viewport meta tag in static HTML (site may be responsive)',
-        severity: 'high'
+        status: viewportStatus,
+        description: viewportDesc,
+        severity: viewportStatus === 'info' ? 'low' : 'high',
+        explanation: viewportExplanation
       });
 
       // 9. Image Alt Texts
@@ -254,7 +291,8 @@ class SeoCheck {
         name: 'Image Alt Attributes',
         status: images.length === 0 ? 'pass' : imagesWithAlt / images.length > 0.8 ? 'pass' : imagesWithAlt > 0 ? 'warn' : 'fail',
         description: images.length === 0 ? 'No images' : `${imagesWithAlt}/${images.length} images have alt text`,
-        severity: 'high'
+        severity: 'high',
+        explanation: 'Alt text helps search engines understand images and improves accessibility.'
       });
 
       // 10. Favicon
@@ -263,7 +301,8 @@ class SeoCheck {
         name: 'Favicon',
         status: favicon ? 'pass' : 'info',
         description: favicon ? 'Favicon found' : 'No favicon detected',
-        severity: 'low'
+        severity: 'low',
+        explanation: 'Favicons appear in browser tabs and bookmarks, helping users identify your site.'
       });
 
       // 11. Deep Link Extraction (using headless browser)
@@ -281,9 +320,10 @@ class SeoCheck {
         
         checks.push({
           name: 'Deep Link Discovery',
-          status: extractedLinks.length > 0 ? 'pass' : 'warn',
+          status: extractedLinks.length > 0 ? 'pass' : 'info',
           description: `Discovered ${extractedLinks.length} total links (${internalLinks.length} internal, ${extractedLinks.length - internalLinks.length} external) via interactive exploration`,
           severity: 'low',
+          explanation: 'Internal links help search engines discover and index your content.',
           details: {
             totalLinks: extractedLinks.length,
             internalLinks: internalLinks.length,
@@ -294,9 +334,10 @@ class SeoCheck {
       } catch (linkError) {
         checks.push({
           name: 'Deep Link Discovery',
-          status: 'warn',
-          description: `Could not extract links via browser: ${linkError.message}`,
-          severity: 'low'
+          status: 'info',
+          description: `Link discovery via browser not available`,
+          severity: 'low',
+          explanation: 'Advanced link discovery requires a headless browser which may not be available.'
         });
       }
 
@@ -304,15 +345,19 @@ class SeoCheck {
       checks.push({
         name: 'SEO Analysis Error',
         status: 'error',
-        description: `Unable to analyze: ${error.message}`,
-        severity: 'critical'
+        description: 'SEO analysis unavailable',
+        severity: 'critical',
+        explanation: `An error occurred: ${error.message}`
       });
     }
 
+    const score = calculateCategoryScore(checks);
+    
     return {
       category: 'SEO & Metadata',
       icon: 'bar-chart',
-      score: calculateCategoryScore(checks),
+      score: score,
+      status: score === null ? 'unavailable' : 'available',
       checks
     };
   }
