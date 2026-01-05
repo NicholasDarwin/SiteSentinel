@@ -2,6 +2,8 @@
 
 A powerful, open-source web application that performs comprehensive security, performance, SEO, and best practices analysis on any public website. Perfect for your personal website or resume portfolio to demonstrate cybersecurity expertise.
 
+<!-- Last updated: 2026 -->
+
 ## Features
 
 ### 50+ Security & Web Analysis Checks
