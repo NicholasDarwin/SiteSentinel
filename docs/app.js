@@ -222,20 +222,41 @@ class SiteSentinelApp {
     // Update overall score
     this.overallScore.textContent = data.overall.score;
     this.scoreLabel.textContent = data.overall.label || 'Unknown';
-    
+
+    // Credential Harvesting warning popup logic
+    const credHarvestWarning = document.getElementById('credHarvestWarning');
+    const credHarvestWarningText = document.getElementById('credHarvestWarningText');
+    let showCredHarvest = false;
+    let credHarvestMsg = '';
+    // Find the Safety & Threats category and its Credential Harvesting check
+    const safetyCat = (data.categories || []).find(cat => cat.category && cat.category.toLowerCase().includes('safety'));
+    if (safetyCat && Array.isArray(safetyCat.checks)) {
+      const credCheck = safetyCat.checks.find(c => c.name && c.name.toLowerCase().includes('credential harvesting'));
+      if (credCheck && credCheck.status !== 'fail' && credCheck.status !== 'pass' && credCheck.description) {
+        showCredHarvest = true;
+        credHarvestMsg = credCheck.description;
+      }
+    }
+    if (showCredHarvest && credHarvestWarning && credHarvestWarningText) {
+      credHarvestWarningText.textContent = credHarvestMsg;
+      credHarvestWarning.style.display = 'block';
+    } else if (credHarvestWarning) {
+      credHarvestWarning.style.display = 'none';
+    }
+
     // Apply color gradient to overall score circle
     const scoreColor = this.getScoreColor(data.overall.score);
     const scoreArc = document.getElementById('scoreArc');
     if (scoreArc) {
       scoreArc.style.stroke = scoreColor;
     }
-    
+
     // Update URL
     this.analyzedUrl.textContent = data.url || 'Unknown';
 
     // Display categories
     this.categoriesGrid.innerHTML = '';
-    
+
     const categories = data.categories || [];
     if (!Array.isArray(categories)) {
       console.error('Categories is not an array:', categories);
