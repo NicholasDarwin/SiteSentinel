@@ -147,6 +147,8 @@ class SiteSentinelApp {
     this.resultsSection.style.display = 'none';
     this.submitBtn.disabled = true;
     this.submitBtn.textContent = 'Analyzing...';
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
     try {
       const response = await fetch('/api/analyze', {
@@ -193,6 +195,7 @@ class SiteSentinelApp {
     } finally {
       this.submitBtn.disabled = false;
       this.submitBtn.textContent = 'Analyze';
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
   }
 
