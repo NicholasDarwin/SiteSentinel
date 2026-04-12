@@ -1,4 +1,4 @@
-# SiteSentinel - Comprehensive Website Security Analysis Tool
+# SiteSentinel - Website Security Analysis Tool
 
 A powerful, open-source web application that performs comprehensive security, performance, SEO, and best practices analysis on any public website. Perfect for your personal website or resume portfolio to demonstrate cybersecurity expertise.
 
