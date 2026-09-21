@@ -71,6 +71,18 @@ function computeCategoryScore(checks) {
   return Math.max(CATEGORY_SCORE_FLOOR, Math.min(100, Math.round(100 - totalDeducted)));
 }
 
+// Readable labels for the richer threat-verdict taxonomy some Safety &
+// Threats checks carry (see safety.check.js doc comment) - kept separate
+// from `status` (pass/warn/fail/info/error), which still drives scoring/UI
+// color as before.
+const VERDICT_LABELS = {
+  'confirmed': 'Confirmed Threat',
+  'security-test': 'Security-Test Target',
+  'suspicious': 'Suspicious',
+  'none': 'No Threat Detected',
+  'unable-to-determine': 'Unable to Determine'
+};
+
 /** Escapes text for safe insertion into innerHTML. Evidence/description
  * content originates from arbitrary scanned websites, so anything from a
  * check object must be escaped before going into a template string. */
@@ -92,6 +104,7 @@ class SiteSentinelApp {
     this.categoriesGrid = document.getElementById('categoriesGrid');
     this.overallScore = document.getElementById('overallScore');
     this.scoreLabel = document.getElementById('scoreLabel');
+    this.scoreNote = document.getElementById('scoreNote');
     this.analyzedUrl = document.getElementById('analyzedUrl');
     this.newAnalysisBtn = document.getElementById('newAnalysisBtn');
     this.exportBtn = document.getElementById('exportBtn');
@@ -263,6 +276,14 @@ class SiteSentinelApp {
     // Update overall score
     this.overallScore.textContent = data.overall.score;
     this.scoreLabel.textContent = data.overall.label || 'Unknown';
+    if (this.scoreNote) {
+      if (data.overall.unableToAnalyze && data.overall.note) {
+        this.scoreNote.textContent = data.overall.note;
+        this.scoreNote.style.display = 'block';
+      } else {
+        this.scoreNote.style.display = 'none';
+      }
+    }
 
     // Credential Harvesting warning popup logic
     const credHarvestWarning = document.getElementById('credHarvestWarning');
@@ -290,8 +311,10 @@ class SiteSentinelApp {
       credHarvestWarning.style.display = 'none';
     }
 
-    // Apply color gradient to overall score circle
-    const scoreColor = this.getScoreColor(data.overall.score);
+    // Apply color gradient to overall score circle - prefer the server's color
+    // (it already accounts for the "unable to analyze" gray override; recomputing
+    // client-side from the raw number alone would miss that).
+    const scoreColor = data.overall.color || this.getScoreColor(data.overall.score);
     const scoreArc = document.getElementById('scoreArc');
     if (scoreArc) {
       scoreArc.style.stroke = scoreColor;
@@ -558,6 +581,7 @@ class SiteSentinelApp {
     const evidence = check.evidence || [];
     const visibleCount = 20;
     const confidence = check.confidence || 'medium';
+    const verdictLabel = VERDICT_LABELS[check.verdict];
 
     const otherChecks = (category.checks || []).filter(c => c !== check);
     const scoreWithout = computeCategoryScore(otherChecks);
@@ -582,6 +606,7 @@ class SiteSentinelApp {
         <div>
           <h2 class="modal-check-title">${escapeHtml(check.name)}</h2>
           <div class="modal-check-badges">
+            ${verdictLabel ? `<span class="modal-badge verdict-${escapeHtml(check.verdict)}">${escapeHtml(verdictLabel)}</span>` : ''}
             <span class="modal-badge status-${escapeHtml(check.status)}">${escapeHtml((check.status || 'unknown').toUpperCase())}</span>
             <span class="modal-badge confidence-${escapeHtml(confidence)}">Confidence: ${escapeHtml(confidence)}</span>
           </div>
@@ -596,6 +621,7 @@ class SiteSentinelApp {
       <div class="modal-section">
         <h4>Verdict</h4>
         <p>${escapeHtml(check.description)}</p>
+        ${check.source ? `<p class="modal-source-line">Source: <strong>${escapeHtml(check.source)}</strong>${check.threatCategory && check.threatCategory !== 'none' ? ` · Category: ${escapeHtml(check.threatCategory)}` : ''}</p>` : ''}
       </div>
 
       ${check.method ? `
@@ -849,9 +875,11 @@ Overall Score: ${data.overall.score}/100 (${data.overall.label})
       category.checks.forEach(check => {
         report += `${this.getStatusText(check.status)} ${check.name}\n`;
         let statusLine = `   Status: ${(check.status || '').toUpperCase()}`;
+        if (check.verdict) statusLine += ` | Verdict: ${VERDICT_LABELS[check.verdict] || check.verdict}`;
         if (check.maxPoints) statusLine += ` | Points: -${check.pointsDeducted || 0}/${check.maxPoints}`;
         if (check.confidence) statusLine += ` | Confidence: ${check.confidence}`;
         report += statusLine + '\n';
+        if (check.source) report += `   Source: ${check.source}\n`;
         report += `   ${check.description}\n`;
         if (check.method) report += `   Method: ${check.method}\n`;
         if (check.risk) report += `   Why it matters: ${check.risk}\n`;

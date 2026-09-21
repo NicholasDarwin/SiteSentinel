@@ -13,8 +13,9 @@ const SafetyCheck = require('../checks/safety.check');
 const LinkAnalysisCheck = require('../checks/link-analysis.check');
 const ExternalLinksCheck = require('../checks/external-links.check');
 const WhoisCheck = require('../checks/whois.check');
-const { validateUrl } = require('../utils/validators.util');
+const { validateUrl, getHostname } = require('../utils/validators.util');
 const { calculateOverallScore, getScoreLabel, getScoreColor, annotateCheckPoints } = require('../utils/score-calculator.util');
+const { assertHostnameIsSafe } = require('../utils/ssrf-guard.util');
 const logger = require('../utils/logger.util');
 
 /**
@@ -37,10 +38,40 @@ router.post('/analyze', async (req, res) => {
     // Validate URL format
     validatedUrl = validateUrl(url);
     if (!validatedUrl) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.',
-        success: false 
+        success: false
       });
+    }
+
+    // SSRF pre-check: reject obviously-unsafe targets (localhost, private/link-local
+    // IPs, cloud metadata addresses) before dispatching any of the 9 parallel
+    // checks. This is defense-in-depth for the initial target - each check that
+    // fetches over HTTP additionally re-validates every redirect hop it follows
+    // (see http.util.js / ssrf-guard.util.js), since a malicious site could
+    // otherwise redirect a check to an internal address after this point.
+    //
+    // IMPORTANT: only reject when the hostname resolves to a *blocked* address
+    // (code ERR_SSRF_BLOCKED). A plain DNS lookup failure (unregistered domain,
+    // temporary resolver issue, etc) is a completely different situation - that's
+    // not a restricted destination, it's just an unreachable one, and each check
+    // already handles that correctly on its own (reporting "unable to determine",
+    // never "safe" - see safety.check.js). Treating a DNS failure as an SSRF block
+    // here would incorrectly short-circuit the whole analysis before any check got
+    // a chance to run and report that properly.
+    try {
+      await assertHostnameIsSafe(getHostname(validatedUrl));
+    } catch (ssrfError) {
+      if (ssrfError && ssrfError.code === 'ERR_SSRF_BLOCKED') {
+        logger.warn(`Rejected SSRF-risky target: ${validatedUrl}`, { reason: ssrfError.message });
+        return res.status(400).json({
+          error: 'This URL cannot be analyzed: it resolves to a restricted or private network destination.',
+          success: false
+        });
+      }
+      // Any other error (DNS lookup failure, etc) - let the request proceed; the
+      // individual checks will each attempt to fetch it and report accordingly.
+      logger.debug(`SSRF pre-check lookup failed (not a block, proceeding): ${validatedUrl}`, { reason: ssrfError.message });
     }
 
     logger.info(`Analyzing URL: ${validatedUrl}`);
@@ -134,8 +165,19 @@ router.post('/analyze', async (req, res) => {
       overallScore = Math.min(overallScore, 25); // Cap at 25/100 for suspicious redirects
     }
 
-    const scoreLabel = getScoreLabel(overallScore);
-    const scoreColor = getScoreColor(overallScore);
+    // If most categories couldn't be analyzed at all (e.g. the target doesn't
+    // resolve, or times out on every request), the numeric score - however it's
+    // computed from the handful of categories that DID run (DNS/WHOIS lookups
+    // don't require fetching the page itself, so they can "succeed" even when
+    // the site is completely unreachable) - would misleadingly read as a normal
+    // rating. Surface that plainly instead of letting an unreachable domain show
+    // up as "Good". The raw score/breakdown are still included for reference.
+    const includedCategories = scoreBreakdown.includedCategories;
+    const totalCategoriesCount = scoreBreakdown.totalCategories;
+    const unableToAnalyze = totalCategoriesCount > 0 && (includedCategories / totalCategoriesCount) < (1 / 3);
+
+    const scoreLabel = unableToAnalyze ? 'Unable to Analyze' : getScoreLabel(overallScore);
+    const scoreColor = unableToAnalyze ? '#6b7280' : getScoreColor(overallScore);
 
     const result = {
       success: true,
@@ -145,6 +187,10 @@ router.post('/analyze', async (req, res) => {
         score: overallScore,
         label: scoreLabel,
         color: scoreColor,
+        unableToAnalyze,
+        note: unableToAnalyze
+          ? `Only ${includedCategories} of ${totalCategoriesCount} categories could be analyzed - the target was largely unreachable, so this score is not a meaningful security rating.`
+          : undefined,
         breakdown: scoreBreakdown
       },
       categories: validCategories

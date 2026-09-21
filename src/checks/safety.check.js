@@ -9,6 +9,33 @@
  * pointsDeducted/maxPoints are added afterwards by
  * score-calculator.util.js#annotateCheckPoints (called from analyze.route.js
  * for every category), not here.
+ *
+ * THREAT VERDICT TAXONOMY
+ * ------------------------
+ * The Malware/Phishing Indicators check (and a few related ones) also carry
+ * a `verdict` field - a richer classification than the 5-value `status` used
+ * for scoring - so the report can distinguish:
+ *   - 'confirmed'            a trusted source (Google Safe Browsing) or a
+ *                            high-confidence local content analysis found a
+ *                            real threat.
+ *   - 'security-test'        the URL matches a known security-test
+ *                            signature (see security-test-signatures.util.js)
+ *                            - e.g. Google's own Safe Browsing test pages.
+ *                            Scored exactly like 'confirmed' (a scanner that
+ *                            can't recognize its own vendor's test target
+ *                            has a real gap), but labeled distinctly so the
+ *                            report never reads as an accusation against the
+ *                            test provider's real infrastructure.
+ *   - 'suspicious'           weaker/heuristic signals, individually or in
+ *                            combination, that fall short of confirmation.
+ *   - 'none'                 no indicators found.
+ *   - 'unable-to-determine'  the live fetch (or, narrowly, a specific data
+ *                            source like Google Safe Browsing) could not be
+ *                            completed - this is NEVER reported as "safe".
+ * `verdict` maps onto the existing `status` (pass/warn/fail/info/error) for
+ * scoring purposes: confirmed/security-test -> fail, suspicious -> warn,
+ * none -> pass, unable-to-determine -> error (excluded from scoring, same as
+ * any other 'error' check - see score-calculator.util.js).
  */
 
 const cheerio = require('cheerio');
@@ -22,7 +49,8 @@ const {
   buildScriptEvidence,
   buildMixedContentEvidence
 } = require('../utils/evidence.util');
-const { fetchWithRedirectChain } = require('../utils/http.util');
+const { fetchWithRedirectChain, classifyFetchError } = require('../utils/http.util');
+const { matchSecurityTestSignature } = require('../utils/security-test-signatures.util');
 const logger = require('../utils/logger.util');
 
 // A plain "note" evidence item for signals that aren't a regex match against
@@ -32,6 +60,9 @@ const logger = require('../utils/logger.util');
 function noteEvidence(context, matchedRule) {
   return { type: 'note', matchedText: null, context, matchedRule: matchedRule || null };
 }
+
+// Shared burner/disposable-domain TLD list used by several heuristics below.
+const BURNER_TLDS = ['.xyz', '.top', '.club', '.online', '.site', '.icu', '.buzz', '.fun', '.click', '.download', '.loan', '.win'];
 
 class SafetyCheck {
   /**
@@ -157,8 +188,7 @@ class SafetyCheck {
       }
 
       // Short-lived/burner domain patterns
-      const burnerTLDs = ['.xyz', '.top', '.club', '.online', '.site', '.icu', '.buzz', '.fun'];
-      for (const tld of burnerTLDs) {
+      for (const tld of BURNER_TLDS) {
         if (hostname.endsWith(tld)) {
           riskScore += 15;
           signals.push(`Suspicious TLD "${tld}" common with disposable domains`);
@@ -272,6 +302,11 @@ class SafetyCheck {
         { pattern: /microsoft.{0,20}support.{0,20}call/i, weight: 45, signal: 'Fake Microsoft support call prompt' },
         { pattern: /apple.{0,20}support.{0,20}call/i, weight: 45, signal: 'Fake Apple support call prompt' },
         { pattern: /do\s+not\s+(close|restart|turn\s+off).{0,30}(computer|device|browser)/i, weight: 35, signal: 'Fake "do not close your computer" warning' },
+        // Software-update social-engineering (fake update prompts used to trick users
+        // into installing something) - a real, common phishing/malvertising pattern.
+        { pattern: /software.{0,15}(is\s+)?out.?of.?date/i, weight: 30, signal: 'Fake "software is out of date" social-engineering prompt' },
+        { pattern: /(update|upgrade).{0,15}(is\s+)?required.{0,20}(to\s+)?continue/i, weight: 25, signal: 'Fake "update required to continue" prompt' },
+        { pattern: /does\s+not\s+(actually\s+)?originate\s+from/i, weight: 15, signal: 'Text disclaiming a fake vendor dialogue (social-engineering description)' },
         // Prize / financial urgency - weaker alone, since similar phrasing shows up
         // in legitimate marketing and loyalty programs
         { pattern: /congratulations.{0,20}you.{0,20}(won|winner|selected)/i, weight: 25, signal: 'Prize/lottery-style congratulations message' },
@@ -317,15 +352,193 @@ class SafetyCheck {
   }
 
   /**
-   * Detect credential harvesting patterns
-   * @param {string} bodyLower - Lowercase page content
-   * @param {string} hostname - The hostname being analyzed
-   * @returns {{ isHarvesting: boolean, reason: string, evidence: object[] }}
+   * Scans inline <script> bodies for common obfuscation/packer patterns used
+   * to hide malicious payloads from casual inspection (and from simple
+   * text-based scanners). Weighted/combined like the other detectors above -
+   * eval() alone is far too common in legitimate code to mean anything by
+   * itself; it's the COMBINATION with unescape/fromCharCode/atob, or a dense
+   * run of hex/unicode escapes, that's the real signal.
    */
-  detectCredentialHarvesting(bodyLower, hostname) {
+  detectObfuscatedScripts($, rawHtml) {
     try {
       const evidence = [];
-      // Check for login forms on suspicious domains
+      const signals = [];
+      let score = 0;
+
+      const inlineScripts = $('script:not([src])').toArray();
+      for (const el of inlineScripts) {
+        const content = $(el).html() || '';
+        if (!content.trim()) continue;
+
+        const hasEval = /\beval\s*\(/i.test(content);
+        const hasUnescape = /\bunescape\s*\(/i.test(content);
+        const hasFromCharCode = /String\.fromCharCode\s*\(/i.test(content);
+        const hasAtob = /\batob\s*\(/i.test(content);
+        const hasDocWriteUnescape = /document\.write\s*\(\s*unescape\s*\(/i.test(content);
+        const hexEscapeCount = (content.match(/\\x[0-9a-f]{2}/gi) || []).length;
+        const unicodeEscapeCount = (content.match(/\\u[0-9a-f]{4}/gi) || []).length;
+        const isDenseSingleLine = content.length > 400 && content.split('\n').length <= 2;
+
+        let scriptScore = 0;
+        const scriptSignals = [];
+
+        if (hasDocWriteUnescape) {
+          scriptScore += 50;
+          scriptSignals.push('document.write(unescape(...)) - classic exploit-kit injection pattern');
+        }
+        if (hasEval && (hasUnescape || hasFromCharCode || hasAtob)) {
+          scriptScore += 40;
+          scriptSignals.push('eval() combined with unescape/String.fromCharCode/atob - common JS packer/deobfuscation pattern');
+        } else if (hasEval) {
+          scriptScore += 8;
+          scriptSignals.push('eval() present (weak signal alone - used by some legitimate bundlers/libraries)');
+        }
+        if (hexEscapeCount > 20) {
+          scriptScore += 25;
+          scriptSignals.push(`${hexEscapeCount} "\\x" hex-escape sequences - typical of obfuscated payloads`);
+        }
+        if (unicodeEscapeCount > 20) {
+          scriptScore += 20;
+          scriptSignals.push(`${unicodeEscapeCount} "\\u" unicode-escape sequences - typical of obfuscated payloads`);
+        }
+        if (isDenseSingleLine && (hasEval || hexEscapeCount > 5 || unicodeEscapeCount > 5)) {
+          scriptScore += 15;
+          scriptSignals.push('dense single-line script combined with escape sequences/eval');
+        }
+
+        if (scriptScore > 0) {
+          score += scriptScore;
+          signals.push(...scriptSignals);
+          const domEvidence = buildDomEvidence($, el, rawHtml, 'inline script with obfuscation indicators');
+          evidence.push({ ...domEvidence, matchedRule: scriptSignals.join('; ') });
+        }
+      }
+
+      return { isObfuscated: score >= 40, score, signals, evidence };
+    } catch (err) {
+      logger.error('Error in detectObfuscatedScripts:', err.message);
+      return { isObfuscated: false, score: 0, signals: [], evidence: [] };
+    }
+  }
+
+  /**
+   * Flags external iframes that are hidden (zero-size or display:none/
+   * visibility:hidden) or point at a suspicious-TLD domain - both classic
+   * drive-by/clickjacking patterns, and a meaningfully stronger signal than
+   * "an external iframe exists" (which the separate Iframe Usage check
+   * already reports as routine and low-severity).
+   */
+  detectSuspiciousIframes($, finalUrl, hostname, rawHtml) {
+    try {
+      const evidence = [];
+      const signals = [];
+      let score = 0;
+
+      $('iframe').each((i, el) => {
+        const $el = $(el);
+        const src = $el.attr('src');
+        if (!src) return;
+        let iframeHostname;
+        try {
+          iframeHostname = new URL(src, finalUrl).hostname;
+        } catch (e) {
+          return;
+        }
+        if (iframeHostname === hostname) return; // same-site, not external
+
+        const width = ($el.attr('width') || '').replace(/px/i, '').trim();
+        const height = ($el.attr('height') || '').replace(/px/i, '').trim();
+        const style = ($el.attr('style') || '').toLowerCase();
+        const isHidden = width === '0' || height === '0' ||
+          /display\s*:\s*none/.test(style) || /visibility\s*:\s*hidden/.test(style) ||
+          /width\s*:\s*0/.test(style) || /height\s*:\s*0/.test(style);
+        const hasSuspiciousTld = BURNER_TLDS.some(tld => iframeHostname.endsWith(tld));
+
+        if (isHidden) {
+          score += 35;
+          signals.push(`Hidden/zero-size external iframe pointing to ${iframeHostname} - a common clickjacking/drive-by pattern`);
+          evidence.push({ ...buildDomEvidence($, el, rawHtml, `hidden external iframe (${iframeHostname})`), matchedRule: 'hidden/zero-size iframe' });
+        } else if (hasSuspiciousTld) {
+          score += 15;
+          signals.push(`External iframe pointing to a suspicious-TLD domain (${iframeHostname})`);
+          evidence.push({ ...buildDomEvidence($, el, rawHtml, `iframe with suspicious-TLD src (${iframeHostname})`), matchedRule: 'suspicious-TLD iframe src' });
+        }
+      });
+
+      return { isSuspicious: score >= 30, score, signals, evidence };
+    } catch (err) {
+      logger.error('Error in detectSuspiciousIframes:', err.message);
+      return { isSuspicious: false, score: 0, signals: [], evidence: [] };
+    }
+  }
+
+  /**
+   * Looks for suspicious patterns in the redirect chain actually followed to
+   * reach the final page (captured by http.util.js#fetchWithRedirectChain):
+   * an unusually long chain, a hop through a suspicious-TLD domain, or a
+   * chain that crosses multiple different domains before landing somewhere
+   * different from where it started. Any one of these alone is fairly weak
+   * (legitimate URL shorteners and domain migrations do this too), which is
+   * why this only becomes a signal in combination (see scoring below).
+   */
+  analyzeRedirectChain(redirectChain, originalHostname, finalHostname) {
+    try {
+      if (!redirectChain || redirectChain.length === 0) {
+        return { isSuspicious: false, score: 0, signals: [], evidence: [] };
+      }
+
+      let score = 0;
+      const signals = [];
+      const evidence = redirectChain.map(hop => noteEvidence(`${hop.url} → HTTP ${hop.status}`, 'redirect hop'));
+
+      if (redirectChain.length >= 3) {
+        score += 20;
+        signals.push(`Long redirect chain (${redirectChain.length} hops) - can be used to obscure the true destination`);
+      }
+
+      const hopHostnames = redirectChain
+        .map(hop => { try { return new URL(hop.url).hostname; } catch { return null; } })
+        .filter(Boolean);
+      const suspiciousHop = hopHostnames.find(h => BURNER_TLDS.some(tld => h.endsWith(tld)));
+      if (suspiciousHop) {
+        score += 30;
+        signals.push(`Redirect chain passes through a suspicious-TLD domain (${suspiciousHop})`);
+      }
+
+      if (originalHostname !== finalHostname && redirectChain.length >= 2) {
+        score += 10;
+        signals.push(`Redirect chain crosses multiple domains before landing on a different final domain (${originalHostname} → ${finalHostname})`);
+      }
+
+      return { isSuspicious: score >= 30, score, signals, evidence };
+    } catch (err) {
+      logger.error('Error in analyzeRedirectChain:', err.message);
+      return { isSuspicious: false, score: 0, signals: [], evidence: [] };
+    }
+  }
+
+  /**
+   * Detect credential harvesting patterns.
+   *
+   * Two tiers:
+   *  - Strong/standalone signals (brand-impersonation login text, or a form
+   *    field explicitly asking for a card/CVV/SSN) still trigger on their
+   *    own, as before.
+   *  - A bare login form on a domain outside the small known-brand allowlist
+   *    is, BY ITSELF, only a very weak signal - most legitimate websites
+   *    have their own login form. It's only escalated to a real finding when
+   *    combined with corroborating signals (self-describing phishing/
+   *    social-engineering text, obfuscated JS elsewhere on the page, a
+   *    hidden iframe, or a suspicious-TLD domain) - see extraSignals.
+   *
+   * @param {string} bodyLower - Lowercase page content
+   * @param {string} hostname - The hostname being analyzed
+   * @param {{ obfuscatedJs?: boolean, hiddenIframe?: boolean, suspiciousTld?: boolean }} extraSignals
+   * @returns {{ isHarvesting: boolean, reason: string, evidence: object[] }}
+   */
+  detectCredentialHarvesting(bodyLower, hostname, extraSignals = {}) {
+    try {
+      const evidence = [];
       const hasLoginForm = /type\s*=\s*["']?password/i.test(bodyLower);
       // Only flag "sensitive fields" when there's an actual <input> element whose
       // name/id/placeholder/autocomplete attribute references a card number, CVV, or
@@ -347,7 +560,7 @@ class SafetyCheck {
       const isLegitDomain = legitimateLoginDomains.some(d => hostname.includes(d));
 
       if (hasLoginForm && !isLegitDomain) {
-        // Check for brand impersonation
+        // Strong signal: explicit brand impersonation
         const brandPatterns = [
           { brand: 'google', pattern: /google.*sign.*in|sign.*in.*google/i },
           { brand: 'facebook', pattern: /facebook.*log.*in|log.*in.*facebook/i },
@@ -364,7 +577,8 @@ class SafetyCheck {
             return {
               isHarvesting: true,
               reason: `DANGER: Potential ${brand.charAt(0).toUpperCase() + brand.slice(1)} credential phishing - login form on non-${brand} domain`,
-              evidence
+              evidence,
+              tier: 'brand-impersonation'
             };
           }
         }
@@ -388,8 +602,47 @@ class SafetyCheck {
         return {
           isHarvesting: true,
           reason: 'WARNING: Page requests sensitive information (SSN/credit card) on untrusted domain',
-          evidence
+          evidence,
+          tier: 'sensitive-fields'
         };
+      }
+
+      // Weak/generic tier: a bare login form outside the known-brand allowlist is
+      // NOT suspicious on its own (most real sites have one) - only escalate when
+      // combined with corroborating signals found elsewhere on the page.
+      if (hasLoginForm && !isLegitDomain) {
+        let score = 15;
+        const signals = ['Login form present on a domain outside the known major-brand allowlist (weak alone - most legitimate sites have their own login form)'];
+
+        const selfDescribingPattern = /\b(phishing|social engineering)\b[\s\S]{0,60}\b(example|test|demo)\b|\b(example|test|demo)\b[\s\S]{0,60}\b(phishing|social engineering)\b/i;
+        const selfDescribingMatch = selfDescribingPattern.exec(bodyLower);
+        if (selfDescribingMatch) {
+          score += 50;
+          signals.push('Page text explicitly describes itself as a phishing/social-engineering example');
+          evidence.push(buildPatternEvidence(bodyLower, selfDescribingMatch, { matchedRule: 'self-describing phishing/social-engineering example text' }));
+        }
+        if (extraSignals.obfuscatedJs) {
+          score += 20;
+          signals.push('Obfuscated JavaScript present alongside an untrusted login form');
+        }
+        if (extraSignals.hiddenIframe) {
+          score += 20;
+          signals.push('Hidden/suspicious iframe present alongside an untrusted login form');
+        }
+        if (extraSignals.suspiciousTld) {
+          score += 15;
+          signals.push('Untrusted login form on a domain with a suspicious TLD');
+        }
+
+        if (score >= 50) {
+          evidence.push(noteEvidence(`Combined credential-harvesting signal score: ${score}/100`, 'weighted generic-login-form scoring'));
+          return {
+            isHarvesting: true,
+            reason: `WARNING: Untrusted login form combined with corroborating signals: ${signals.join('; ')}`,
+            evidence,
+            tier: 'generic-login-form'
+          };
+        }
       }
 
       return { isHarvesting: false, reason: '', evidence: [] };
@@ -404,6 +657,13 @@ class SafetyCheck {
     const hostname = new URL(url).hostname;
     let analysisError = null;
 
+    // Security-test signature matching works on the URL alone - independent of
+    // whether the live fetch below succeeds. This is deliberate: a known test
+    // domain like malware.testing.google.test can fail to resolve via public DNS
+    // while still being a recognized test target - those are separate facts, and
+    // conflating "couldn't fetch it" with "not a test target" would be wrong.
+    const securityTestMatch = matchSecurityTestSignature(url);
+
     try {
       const { response, finalUrl, statusCode, redirectChain } = await fetchWithRedirectChain(url, { timeout: 15000, maxRedirects: 5 });
 
@@ -412,6 +672,7 @@ class SafetyCheck {
       const bodyLower = body.toLowerCase();
       const isHttps = finalUrl.startsWith('https://');
       const $ = cheerio.load(body);
+      const finalHostname = (() => { try { return new URL(finalUrl).hostname; } catch { return hostname; } })();
 
       const requestContext = { headers, finalUrl, statusCode, redirectChain };
 
@@ -423,115 +684,240 @@ class SafetyCheck {
         logger.error('Deceptive download detection failed:', ddErr.message);
       }
 
-      // 2. Scam/Phishing Content Detection (check page content first) - Isolated with try/catch
+      // 2. Scam/Phishing Content Detection - Isolated with try/catch
       let scamDetection = { isScam: false, reason: '', evidence: [] };
       try {
         scamDetection = this.detectScamContent(bodyLower, url);
       } catch (scamErr) {
         logger.error('Scam detection failed:', scamErr.message);
-        // Continue with empty result rather than failing entire analysis
       }
 
-      // 3. Malware / Phishing Indicators - Combine all detection methods
-      //
-      // Detection sources vary a lot in reliability. Deceptive-download content
-      // analysis, explicit scam-content matches, and Google Safe Browsing hits are
-      // high confidence - they're allowed to fail this check and zero out the whole
-      // report. The local heuristic checks (URL-shape typosquat detection, domain
-      // name pattern matching) are comparatively weak signals prone to false
-      // positives, so they only ever downgrade the check to a warning: still visible
-      // to the user, but they can't single-handedly tank an otherwise-clean report.
-      let malwareDetected = deceptiveDownload.isDeceptive || scamDetection.isScam;
-      let highConfidence = malwareDetected;
-      let detectionDetails = deceptiveDownload.reason || scamDetection.reason;
-      let detectionEvidence = [...(deceptiveDownload.evidence || []), ...(scamDetection.evidence || [])];
-      let detectionMethod = 'Content pattern analysis (deceptive-download scoring + weighted scam-content matching)';
+      // 2b. Obfuscated inline JavaScript
+      let obfuscatedScripts = { isObfuscated: false, score: 0, signals: [], evidence: [] };
+      try {
+        obfuscatedScripts = this.detectObfuscatedScripts($, body);
+      } catch (obErr) {
+        logger.error('Obfuscated script detection failed:', obErr.message);
+      }
 
-      // Try Google Safe Browsing API if available
-      const gsApiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY;
-      if (!malwareDetected && gsApiKey) {
-        try {
-          const axios = require('axios');
-          const gsPayload = {
-            client: { clientId: 'sitesentinel', clientVersion: '2.0.0' },
-            threatInfo: {
-              threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
-              platformTypes: ['ANY_PLATFORM'],
-              threatEntryTypes: ['URL'],
-              threatEntries: [{ url }]
+      // 2c. Suspicious (hidden/suspicious-TLD) iframes
+      let suspiciousIframesResult = { isSuspicious: false, score: 0, signals: [], evidence: [] };
+      try {
+        suspiciousIframesResult = this.detectSuspiciousIframes($, finalUrl, hostname, body);
+      } catch (ifErr) {
+        logger.error('Suspicious iframe detection failed:', ifErr.message);
+      }
+
+      // 2d. Redirect chain analysis
+      let redirectChainResult = { isSuspicious: false, score: 0, signals: [], evidence: [] };
+      try {
+        redirectChainResult = this.analyzeRedirectChain(redirectChain, hostname, finalHostname);
+      } catch (rcErr) {
+        logger.error('Redirect chain analysis failed:', rcErr.message);
+      }
+
+      // === 3. COMBINE EVERYTHING INTO ONE THREAT VERDICT ===
+      // Priority order (highest first): security-test signature > confirmed
+      // (Google Safe Browsing or high-confidence local content) > suspicious
+      // (weighted combination of weaker signals) > none.
+      let verdict, malwareCheckStatus, threatCategory, detectionSource;
+      let detectionDetails = '';
+      let detectionMethod = '';
+      let detectionEvidence = [];
+      let confidenceLevel = 'high';
+      let confidenceNote;
+      let gsbStatus = 'not-attempted'; // 'not-configured' | 'error' | 'clean' | 'flagged'
+
+      if (securityTestMatch) {
+        verdict = 'security-test';
+        malwareCheckStatus = 'fail';
+        threatCategory = securityTestMatch.threatCategory;
+        detectionSource = securityTestMatch.provider;
+        detectionDetails = `SECURITY TEST TARGET: ${securityTestMatch.message}`;
+        detectionMethod = 'Matched against the security-test signature registry (security-test-signatures.util.js) - a maintained table of known Safe Browsing test URLs/domains, matched by hostname + path pattern.';
+        detectionEvidence = [noteEvidence(`Matched signature "${securityTestMatch.id}" (${securityTestMatch.provider})`, 'security-test-signatures.util.js')];
+        confidenceLevel = 'high';
+      } else {
+        let highConfidence = deceptiveDownload.isDeceptive || scamDetection.isScam;
+        let malwareDetected = highConfidence;
+        detectionDetails = deceptiveDownload.reason || scamDetection.reason;
+        detectionEvidence = [...(deceptiveDownload.evidence || []), ...(scamDetection.evidence || [])];
+        detectionMethod = 'Content pattern analysis (deceptive-download scoring + weighted scam-content matching)';
+        detectionSource = 'Local Content Analysis';
+        threatCategory = deceptiveDownload.isDeceptive ? 'malware' : (scamDetection.isScam ? 'phishing' : 'none');
+
+        // Google Safe Browsing API, if configured - an independent, authoritative
+        // signal checked regardless of what local analysis already found (unless a
+        // security-test signature already matched above, which takes priority for
+        // labeling purposes and makes an extra API round-trip unnecessary).
+        const gsApiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY;
+        if (!gsApiKey) {
+          gsbStatus = 'not-configured';
+        } else {
+          try {
+            const axios = require('axios');
+            const gsPayload = {
+              client: { clientId: 'sitesentinel', clientVersion: '2.0.0' },
+              threatInfo: {
+                threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
+                platformTypes: ['ANY_PLATFORM'],
+                threatEntryTypes: ['URL'],
+                threatEntries: [{ url }]
+              }
+            };
+            const gsUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${gsApiKey}`;
+            const gsResp = await axios.post(gsUrl, gsPayload, { timeout: 10000 });
+            if (gsResp.data && Object.keys(gsResp.data).length > 0) {
+              gsbStatus = 'flagged';
+              malwareDetected = true;
+              highConfidence = true;
+              detectionDetails = 'DANGER: Google Safe Browsing flagged this site for malware or phishing';
+              detectionMethod = 'Google Safe Browsing API (threatMatches:find)';
+              detectionSource = 'Google Safe Browsing';
+              detectionEvidence = [noteEvidence(JSON.stringify(gsResp.data).slice(0, 300), 'Google Safe Browsing threatMatches response')];
+              threatCategory = (gsResp.data.matches?.[0]?.threatType || 'malware').toLowerCase();
+            } else {
+              gsbStatus = 'clean';
             }
-          };
-          const gsUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${gsApiKey}`;
-          const gsResp = await axios.post(gsUrl, gsPayload, { timeout: 10000 });
-          if (gsResp.data && Object.keys(gsResp.data).length > 0) {
-            malwareDetected = true;
-            highConfidence = true;
-            detectionDetails = 'DANGER: Google Safe Browsing flagged this site for malware or phishing';
-            detectionMethod = 'Google Safe Browsing API (threatMatches:find)';
-            detectionEvidence = [noteEvidence(JSON.stringify(gsResp.data).slice(0, 300), 'Google Safe Browsing threatMatches response')];
+          } catch (err) {
+            gsbStatus = 'error';
+            logger.warn('Google Safe Browsing API call failed:', err.message);
           }
-        } catch (err) {
-          logger.debug('Google Safe Browsing API not available:', err.message);
-          /* Fall back to local detection */
+        }
+
+        // Local heuristic layers - weaker signals, never allowed to fail this check
+        // on their own (only warn), since they're the most false-positive-prone.
+        let lowConfidenceDetected = false;
+        const lowConfidenceSignals = [];
+
+        if (!malwareDetected) {
+          try {
+            if (this.detectPhishingIndicators(url, hostname)) {
+              lowConfidenceDetected = true;
+              lowConfidenceSignals.push('Local heuristic: URL-shape analysis (obfuscated paths) and Levenshtein-distance typosquat detection against known brand domains');
+            }
+          } catch (phishErr) {
+            logger.error('Phishing detection failed:', phishErr.message);
+          }
+        }
+        if (!malwareDetected) {
+          try {
+            const domainCheck = this.checkDomainReputation(hostname, url);
+            if (domainCheck.isSuspicious) {
+              lowConfidenceDetected = true;
+              lowConfidenceSignals.push(`Local heuristic: domain-name pattern matching - ${domainCheck.reason}`);
+            }
+          } catch (domainErr) {
+            logger.error('Domain reputation check failed:', domainErr.message);
+          }
+        }
+        if (!malwareDetected && obfuscatedScripts.isObfuscated) {
+          lowConfidenceDetected = true;
+          lowConfidenceSignals.push(`Obfuscated JavaScript: ${obfuscatedScripts.signals.join('; ')}`);
+          detectionEvidence.push(...obfuscatedScripts.evidence);
+        }
+        if (!malwareDetected && suspiciousIframesResult.isSuspicious) {
+          lowConfidenceDetected = true;
+          lowConfidenceSignals.push(`Suspicious iframe: ${suspiciousIframesResult.signals.join('; ')}`);
+          detectionEvidence.push(...suspiciousIframesResult.evidence);
+        }
+        if (!malwareDetected && redirectChainResult.isSuspicious) {
+          lowConfidenceDetected = true;
+          lowConfidenceSignals.push(`Redirect chain: ${redirectChainResult.signals.join('; ')}`);
+          detectionEvidence.push(...redirectChainResult.evidence);
+        }
+
+        if (highConfidence) {
+          verdict = 'confirmed';
+          malwareCheckStatus = 'fail';
+          confidenceLevel = 'high';
+        } else if (lowConfidenceDetected) {
+          verdict = 'suspicious';
+          malwareCheckStatus = 'warn';
+          confidenceLevel = 'low';
+          detectionDetails = `WARNING: Suspicious indicators detected (not confirmed): ${lowConfidenceSignals.join(' | ')}`;
+          detectionMethod = 'Weighted combination of local heuristics: URL-shape/typosquat analysis, domain-name pattern matching, inline-script obfuscation, hidden/suspicious iframes, and redirect-chain analysis. None of these can fail this check alone.';
+          threatCategory = 'suspicious';
+          confidenceNote = 'These are local heuristic matches, not a confirmed detection from a trusted threat-intelligence source - they can occasionally match unrelated legitimate sites. Treat this as worth a manual look, not a confirmed verdict.';
+        } else {
+          verdict = 'none';
+          malwareCheckStatus = 'pass';
+          threatCategory = 'none';
+          if (gsbStatus === 'error') {
+            confidenceLevel = 'medium';
+            detectionDetails = 'No malware or phishing indicators found by local analysis. Google Safe Browsing could not be reached, so this is not a complete threat-intelligence check.';
+            confidenceNote = 'The Google Safe Browsing API call failed (network/API error) - this result reflects local analysis only, not a full threat-intelligence check. Treat as informative, not authoritative.';
+          } else if (gsbStatus === 'not-configured') {
+            confidenceLevel = 'medium';
+            detectionDetails = 'No malware or phishing indicators found by local analysis. Google Safe Browsing is not configured in this deployment (GOOGLE_SAFE_BROWSING_API_KEY unset), so this is not a complete threat-intelligence check.';
+          } else {
+            detectionDetails = 'No malware or phishing indicators detected by local analysis or Google Safe Browsing.';
+          }
         }
       }
-
-      // Try local phishing detection (weak signal - warn only, never fails on its own)
-      let lowConfidenceDetected = false;
-      if (!malwareDetected) {
-        try {
-          const phishingMatch = this.detectPhishingIndicators(url, hostname);
-          if (phishingMatch) {
-            lowConfidenceDetected = true;
-            detectionDetails = 'WARNING: Suspicious URL patterns detected (possible phishing/scam site)';
-            detectionMethod = 'Local heuristic: URL-shape analysis (obfuscated paths) and Levenshtein-distance typosquat detection against known brand domains';
-          }
-        } catch (phishErr) {
-          logger.error('Phishing detection failed:', phishErr.message);
-        }
-      }
-
-      // Try domain reputation check (weak signal - warn only, never fails on its own)
-      if (!malwareDetected && !lowConfidenceDetected) {
-        try {
-          const domainCheck = this.checkDomainReputation(hostname, url);
-          if (domainCheck.isSuspicious) {
-            lowConfidenceDetected = true;
-            detectionDetails = `WARNING: ${domainCheck.reason}`;
-            detectionMethod = 'Local heuristic: domain-name pattern matching against known malware-distribution TLDs/patterns';
-          }
-        } catch (domainErr) {
-          logger.error('Domain reputation check failed:', domainErr.message);
-        }
-      }
-
-      // Build comprehensive description for malware check
-      let malwareDescription = 'No malware or phishing indicators detected';
-      if (malwareDetected || lowConfidenceDetected) {
-        malwareDescription = detectionDetails;
-      }
-
-      const malwareCheckStatus = highConfidence ? 'fail' : (lowConfidenceDetected ? 'warn' : 'pass');
-      const malwareConfidence = highConfidence ? 'high' : (lowConfidenceDetected ? 'low' : 'high');
 
       checks.push({
         id: 'malware-phishing-indicators',
         name: 'Malware/Phishing Indicators',
         status: malwareCheckStatus,
-        description: malwareDescription,
+        verdict,
+        threatCategory,
+        source: detectionSource,
+        description: detectionDetails,
         severity: 'critical',
-        explanation: 'This check scans for known malware signatures, phishing patterns, deceptive download pages, and scam content using multiple detection methods including behavioral analysis and Google Safe Browsing API. Lower-confidence heuristic matches are shown as a warning rather than a failure.',
+        explanation: 'This check combines the security-test signature registry, Google Safe Browsing (when configured), content pattern analysis (deceptive-download scoring, weighted scam-content matching), inline-script obfuscation detection, hidden/suspicious iframe detection, redirect-chain analysis, and local URL/domain-reputation heuristics. Only the security-test registry and Google Safe Browsing (or very high-confidence local content analysis) can fail this check outright - weaker local heuristics can only produce a warning.',
         method: detectionMethod,
-        risk: 'A confirmed malicious or phishing site can steal credentials, install malware, or trick users into fraudulent payments.',
+        risk: verdict === 'security-test'
+          ? 'This is a recognized security-test resource, not a real threat - but a scanner that can\'t recognize it has a real detection gap, which is why it\'s still treated as a severe finding for scoring purposes.'
+          : 'A confirmed malicious or phishing site can steal credentials, install malware, or trick users into fraudulent payments.',
         fix: malwareCheckStatus === 'pass'
           ? 'No action needed.'
-          : 'Do not enter credentials, payment details, or download files from this site until the flagged signals are manually reviewed. If this is your own site and you believe this is a false positive, review the evidence below and adjust the content or URL pattern that triggered it.',
-        confidence: malwareConfidence,
-        confidenceNote: lowConfidenceDetected
-          ? 'This is a local heuristic match (URL shape or domain-name pattern), not a confirmed detection - it can occasionally match unrelated legitimate sites. Treat it as worth a manual look, not a confirmed verdict.'
-          : undefined
+          : verdict === 'security-test'
+            ? 'No action needed on the target itself (it is an intentional test page) - this result confirms the scanner correctly recognizes known threat-test resources.'
+            : 'Do not enter credentials, payment details, or download files from this site until the flagged signals are manually reviewed. If this is your own site and you believe this is a false positive, review the evidence below and adjust the content or URL pattern that triggered it.',
+        confidence: confidenceLevel,
+        confidenceNote
       });
       attachEvidence(checks[checks.length - 1], detectionEvidence);
+
+      // 3b. Obfuscated JavaScript (separate detailed check, shown whenever detected -
+      // whether or not it also contributed to the combined verdict above)
+      if (obfuscatedScripts.isObfuscated) {
+        checks.push({
+          id: 'obfuscated-javascript',
+          name: 'Obfuscated JavaScript',
+          status: 'warn',
+          verdict: 'suspicious',
+          description: `Inline script(s) with obfuscation indicators detected (score ${obfuscatedScripts.score}): ${obfuscatedScripts.signals.slice(0, 3).join('; ')}`,
+          severity: 'high',
+          explanation: 'Obfuscated JavaScript (packed with eval/unescape/atob, or dense escape-sequence encoding) is a common technique for hiding malicious payloads from both users and simple scanners.',
+          method: 'Scans inline <script> bodies for eval() combined with unescape/String.fromCharCode/atob, document.write(unescape(...)) injection patterns, and dense runs of \\x/\\u escape sequences.',
+          risk: 'Obfuscated scripts can hide credential-stealing code, drive-by download triggers, or redirect logic from casual inspection.',
+          fix: 'Review the flagged inline script(s) below. If this is your own site, avoid obfuscating first-party code - it also defeats CSP nonce/hash allowlisting and makes security review harder.',
+          confidence: 'medium',
+          confidenceNote: 'Some legitimate bundlers/minifiers and analytics snippets use eval() or escape sequences; review the evidence rather than treating a match as automatically malicious.'
+        });
+        attachEvidence(checks[checks.length - 1], obfuscatedScripts.evidence);
+      }
+
+      // 3c. Suspicious redirect chain (separate detailed check)
+      if (redirectChainResult.isSuspicious) {
+        checks.push({
+          id: 'suspicious-redirect-chain',
+          name: 'Suspicious Redirect Chain',
+          status: 'warn',
+          verdict: 'suspicious',
+          description: `Suspicious redirect chain to reach this page: ${redirectChainResult.signals.join('; ')}`,
+          severity: 'medium',
+          explanation: 'Long or cross-domain redirect chains, especially through disposable-TLD domains, can be used to obscure a page\'s true origin or evade simple URL-based filtering.',
+          method: 'Analyzes the actual redirect chain followed to reach the final page (hop count, TLDs of intermediate hosts, and whether the final domain differs from the original).',
+          risk: 'Cloaked/obfuscated redirect chains are a common technique in malvertising and phishing campaigns to hide the real destination until the last hop.',
+          fix: 'Review the redirect chain evidence below. If this is your own site, minimize unnecessary redirect hops.',
+          confidence: 'low',
+          confidenceNote: 'Redirect chains are also used for entirely legitimate reasons (URL shorteners, A/B testing, domain migrations) - this is a weak signal on its own.'
+        });
+        attachEvidence(checks[checks.length - 1], redirectChainResult.evidence);
+      }
 
       // 4. Deceptive Download Page (separate detailed check)
       if (deceptiveDownload.isDeceptive) {
@@ -540,6 +926,7 @@ class SafetyCheck {
           id: 'deceptive-download-page',
           name: 'Deceptive Download Page',
           status: 'fail',
+          verdict: 'confirmed',
           description: `MALWARE DISTRIBUTION: This page exhibits ${deceptiveDownload.signals.length} suspicious signals typical of malware/PUP distribution (risk score ${deceptiveDownload.riskScore}/100)`,
           severity: 'critical',
           explanation: 'This check detects pages that use social engineering to trick users into downloading malicious software. Common indicators include: generic download prompts, missing publisher info, obfuscated URLs, and executable delivery without transparency.',
@@ -560,7 +947,12 @@ class SafetyCheck {
       // 5. Credential Harvesting Detection - Isolated with try/catch
       let credentialHarvesting = { isHarvesting: false, reason: '', evidence: [] };
       try {
-        credentialHarvesting = this.detectCredentialHarvesting(bodyLower, hostname);
+        const suspiciousTld = BURNER_TLDS.some(tld => hostname.endsWith(tld));
+        credentialHarvesting = this.detectCredentialHarvesting(bodyLower, hostname, {
+          obfuscatedJs: obfuscatedScripts.isObfuscated,
+          hiddenIframe: suspiciousIframesResult.isSuspicious,
+          suspiciousTld
+        });
       } catch (credErr) {
         logger.error('Credential harvesting detection failed:', credErr.message);
       }
@@ -568,20 +960,23 @@ class SafetyCheck {
         id: 'credential-harvesting',
         name: 'Credential Harvesting',
         status: credentialHarvesting.isHarvesting ? 'fail' : 'pass',
+        verdict: credentialHarvesting.isHarvesting ? 'confirmed' : 'none',
         description: credentialHarvesting.isHarvesting
           ? credentialHarvesting.reason
           : (credentialHarvesting.reason || 'No credential harvesting patterns detected'),
         severity: 'critical',
         explanation: 'Detects fake login forms and pages that attempt to steal passwords or sensitive information like credit cards and SSNs.',
-        method: 'Looks for <input> fields whose name/id/placeholder/autocomplete attribute references a card number, CVV, or SSN (not just those words appearing in page text), and for login forms whose page text impersonates a brand different from the page\'s own domain.',
+        method: 'Looks for <input> fields whose name/id/placeholder/autocomplete attribute references a card number, CVV, or SSN, and for login forms whose page text impersonates a named brand different from the page\'s own domain. A bare login form with no brand text is only flagged when combined with corroborating signals (self-describing phishing/social-engineering text, obfuscated JS, a hidden iframe, or a suspicious-TLD domain) - see evidence for the exact combination.',
         risk: 'Fake login and payment forms are used to steal usernames, passwords, card numbers, and SSNs directly from users who believe they\'re on a legitimate site.',
         fix: credentialHarvesting.isHarvesting
           ? 'Do not submit any information into this form. If this is your own site, ensure the checkout/login flow is served from a domain your users can visually verify, and consider adding EV/OV certificate indicators.'
           : 'No action needed.',
-        confidence: 'high',
+        confidence: credentialHarvesting.tier === 'generic-login-form' ? 'medium' : 'high',
         confidenceNote: credentialHarvesting.reason && credentialHarvesting.reason.startsWith('NOTICE:')
           ? 'This domain is on a known retail/e-commerce allowlist, so the sensitive-field match is shown as a notice rather than a failure and does not affect the score.'
-          : undefined
+          : credentialHarvesting.tier === 'generic-login-form'
+            ? 'This is a combination of weaker signals (no explicit brand impersonation) - review the evidence before treating this as confirmed.'
+            : undefined
       });
       attachEvidence(checks[checks.length - 1], credentialHarvesting.evidence);
 
@@ -796,7 +1191,10 @@ class SafetyCheck {
       let iframeStatus = 'pass';
       let iframeDesc = 'No iframes detected on page';
 
-      if (externalIframes.length > 0) {
+      if (suspiciousIframesResult.isSuspicious) {
+        iframeStatus = 'warn';
+        iframeDesc = `${externalIframes.length} external iframe(s) detected, including one or more with suspicious characteristics - see the Suspicious Redirect Chain / Malware indicators above and the evidence below`;
+      } else if (externalIframes.length > 0) {
         iframeStatus = 'warn';
         iframeDesc = `${externalIframes.length} external iframe(s) detected - verify they're from trusted sources`;
       } else if (iframeElements.length > 0) {
@@ -808,14 +1206,17 @@ class SafetyCheck {
         name: 'Iframe Usage',
         status: iframeStatus,
         description: iframeDesc,
-        severity: 'medium',
-        explanation: 'Iframes can embed content from other websites. External iframes should be from trusted sources only.',
-        method: 'Finds <iframe> elements whose resolved src hostname differs from the page\'s own hostname.',
-        risk: 'Malicious iframes can be used for clickjacking or to load phishing content inside an otherwise-trusted page.',
-        fix: iframeStatus === 'pass' ? 'No action needed.' : 'Add a sandbox attribute to third-party iframes and verify each source is trusted.',
+        severity: suspiciousIframesResult.isSuspicious ? 'high' : 'medium',
+        explanation: 'Iframes can embed content from other websites. External iframes should be from trusted sources only; hidden/zero-size external iframes are a stronger warning sign (see method).',
+        method: 'Finds <iframe> elements whose resolved src hostname differs from the page\'s own hostname, and separately flags any that are hidden (zero-size or display:none/visibility:hidden) or point at a suspicious-TLD domain.',
+        risk: 'Malicious iframes can be used for clickjacking or to load phishing content inside an otherwise-trusted page; hidden iframes are a classic drive-by/clickjacking delivery mechanism.',
+        fix: iframeStatus === 'pass' ? 'No action needed.' : 'Add a sandbox attribute to third-party iframes and verify each source is trusted. Remove any hidden/zero-size iframes you did not intentionally add.',
         confidence: 'high'
       });
-      attachEvidence(checks[checks.length - 1], externalIframes.map(el => buildDomEvidence($, el, body, 'external iframe')));
+      attachEvidence(checks[checks.length - 1], [
+        ...externalIframes.map(el => buildDomEvidence($, el, body, 'external iframe')),
+        ...suspiciousIframesResult.evidence
+      ]);
 
       // 11. Clickjacking Protection
       const xFrameOptions = (headers['x-frame-options'] || '').toUpperCase();
@@ -889,15 +1290,44 @@ class SafetyCheck {
       attachEvidence(checks[checks.length - 1], mixedContentEvidence);
 
     } catch (error) {
-      logger.error('Safety analysis error:', error.message);
+      // A live-fetch failure (DNS, timeout, connection refused, TLS, SSRF-block,
+      // etc) means NONE of the content-based or network-dependent checks above
+      // could run. This must never be reported as "no indicators found" - that
+      // would be indistinguishable from a genuinely clean result. Every check
+      // below is explicitly 'error' status (excluded from scoring, same as any
+      // other 'error' check - see score-calculator.util.js) with an
+      // 'unable-to-determine' verdict and a description that says so plainly.
+      const errorInfo = classifyFetchError(error);
+      logger.error('Safety analysis error:', errorInfo);
       analysisError = error;
+
+      const testNote = securityTestMatch
+        ? ` Note: this URL matches a known security-test signature (${securityTestMatch.provider}) - ${securityTestMatch.message} Being a known test target and being currently reachable are independent facts; this failure does not mean the target is safe.`
+        : '';
+
+      checks.push({
+        id: 'malware-phishing-indicators',
+        name: 'Malware/Phishing Indicators',
+        status: 'error',
+        verdict: 'unable-to-determine',
+        threatCategory: securityTestMatch ? securityTestMatch.threatCategory : 'unknown',
+        source: 'N/A (fetch failed)',
+        description: `Unable to determine — threat analysis could not be completed (${errorInfo.label}).${testNote}`,
+        severity: 'critical',
+        explanation: 'The live fetch of this URL failed before any content-based or threat-intelligence checks could run. This is explicitly reported as "unable to determine", not as a clean/safe result, and does not contribute to the category score.',
+        method: `Fetch attempt classified as: ${errorInfo.type} (${errorInfo.detail})`,
+        risk: 'An unreachable target cannot be assessed - treat it with the same caution as an unknown site until it can be reached and analyzed.',
+        fix: 'Retry the analysis once the target is reachable. If this failure persists for a URL you expect to be reachable, check DNS configuration, firewall rules, or TLS certificate validity.',
+        confidence: 'low',
+        confidenceNote: 'This result reflects a failed connection attempt, not a security assessment of the target\'s content.'
+      });
       checks.push({
         id: 'safety-analysis-error',
         name: 'Safety Analysis Error',
         status: 'error',
-        description: 'Safety analysis unavailable (engine error)',
+        description: `Unable to determine — Safety & Threats analysis could not be completed (${errorInfo.label}: ${errorInfo.detail})`,
         severity: 'critical',
-        explanation: 'An error occurred during safety analysis. This category will not contribute to the overall score.'
+        explanation: 'An error occurred before the page could be fetched, so no safety checks could run. This category will not contribute to the overall score.'
       });
     }
 

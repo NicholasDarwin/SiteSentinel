@@ -1063,6 +1063,15 @@ body {
   font-weight: 600;
 }
 
+.score-note {
+  max-width: 260px;
+  margin: 8px auto 0;
+  font-size: 0.78em;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 .cred-harvest-warning {
   display: none;
   position: relative;
@@ -2197,6 +2206,16 @@ body {
 .modal-badge.confidence-high { background: rgba(16, 185, 129, 0.12); color: #059669; }
 .modal-badge.confidence-medium { background: rgba(245, 158, 11, 0.12); color: #b45309; }
 .modal-badge.confidence-low { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+
+/* Richer threat-verdict badges (see VERDICT_LABELS) - shown alongside, not
+   instead of, the status/confidence badges above. */
+.modal-badge.verdict-confirmed { background: #dc2626; color: white; }
+.modal-badge.verdict-security-test { background: #7c3aed; color: white; }
+.modal-badge.verdict-suspicious { background: #f59e0b; color: white; }
+.modal-badge.verdict-none { background: #10b981; color: white; }
+.modal-badge.verdict-unable-to-determine { background: #6b7280; color: white; }
+
+.modal-source-line { font-size: 0.85em; color: var(--text-secondary); margin-top: 6px; }
 
 .modal-section { margin-bottom: 20px; }
 .modal-section:last-child { margin-bottom: 0; }
