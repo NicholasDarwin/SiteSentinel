@@ -14,7 +14,7 @@ const LinkAnalysisCheck = require('../checks/link-analysis.check');
 const ExternalLinksCheck = require('../checks/external-links.check');
 const WhoisCheck = require('../checks/whois.check');
 const { validateUrl } = require('../utils/validators.util');
-const { calculateOverallScore, getScoreLabel, getScoreColor } = require('../utils/score-calculator.util');
+const { calculateOverallScore, getScoreLabel, getScoreColor, annotateCheckPoints } = require('../utils/score-calculator.util');
 const logger = require('../utils/logger.util');
 
 /**
@@ -98,6 +98,15 @@ router.post('/analyze', async (req, res) => {
 
     // Filter to only valid categories (those that actually ran)
     const validCategories = categories.filter(cat => cat && typeof cat === 'object');
+
+    // Annotate every check in every category with pointsDeducted/maxPoints (and a
+    // default confidence/summary for checks that don't yet carry the newer
+    // structured-evidence fields) so the Score Breakdown view and evidence panel
+    // work consistently across all 9 categories, not just the ones that have been
+    // given full evidence support.
+    validCategories.forEach(cat => {
+      if (cat && Array.isArray(cat.checks)) annotateCheckPoints(cat.checks);
+    });
 
     // Ensure we have at least some categories
     if (validCategories.length === 0) {

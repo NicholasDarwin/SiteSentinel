@@ -37,42 +37,52 @@ const IMPORTANT_CHECKS = new Set([
   'Form Input Labels'
 ]);
 
-// Mapping of check names to their detail page URLs
-const CHECK_DETAIL_PAGES = {
-  // Safety & Threats checks (Critical)
-  'Malware/Phishing Indicators': 'safety/malware-phishing.html',
-  'SSL Certificate Status': 'safety/ssl-certificate.html',
-  'Form Security': 'safety/form-security.html',
-  'XSS (Cross-Site Scripting) Protection': 'safety/xss-protection.html',
-  'External Scripts': 'safety/external-scripts.html',
-  'Clickjacking Protection': 'safety/iframe-usage.html',
-  'Mixed Content': 'safety/ssl-certificate.html',
-  'Iframe Usage': 'safety/iframe-usage.html',
-  
-  // Security & HTTPS checks (Critical/High)
-  'HTTPS Encryption': 'agents/security-agent.html',
-  'Content Security Policy (CSP)': 'agents/security-agent.html',
-  'TLS Protocol Version': 'agents/security-agent.html',
-  'Redirect Scam Detection': 'agents/security-agent.html',
-  
-  // DNS & Domain checks (Important)
-  'DNS Resolution': 'agents/dns-agent.html',
-  'SPF Record (Email Security)': 'agents/dns-agent.html',
-  'DMARC Record (Email Auth)': 'agents/dns-agent.html',
-  
-  // Performance checks
-  'Page Load Time': 'agents/performance-agent.html',
-  
-  // SEO & Metadata checks
-  'Page Title': 'agents/seo-agent.html',
-  'Meta Description': 'agents/seo-agent.html',
-  'Mobile Viewport': 'agents/seo-agent.html',
-  
-  // Accessibility checks
-  'Page Language Declaration': 'agents/accessibility-agent.html',
-  'Image Alt Text': 'agents/accessibility-agent.html',
-  'Form Input Labels': 'agents/accessibility-agent.html'
+// ─────────────────────────────────────────────────────────────
+// Scoring mirror - MUST stay in sync with src/utils/score-calculator.util.js.
+// Duplicated here (rather than imported) because this is a static frontend
+// with no build step. Used only to show "this check cost the category N
+// points (category would be X/100 without it)" inside the evidence modal -
+// the actual category/overall scores always come straight from the server.
+// ─────────────────────────────────────────────────────────────
+const SEVERITY_WEIGHTS = {
+  critical: { maxPoints: 35 },
+  high: { maxPoints: 20 },
+  medium: { maxPoints: 10 },
+  low: { maxPoints: 5 },
+  info: { maxPoints: 0 }
 };
+const WARN_DEDUCTION_RATIO = 0.5;
+const CATEGORY_SCORE_FLOOR = 15;
+
+function getCheckPoints(check) {
+  const cfg = SEVERITY_WEIGHTS[check.severity] || SEVERITY_WEIGHTS.medium;
+  const maxPoints = cfg.maxPoints;
+  let deducted = 0;
+  if (check.status === 'fail') deducted = maxPoints;
+  else if (check.status === 'warn') deducted = Math.round(maxPoints * WARN_DEDUCTION_RATIO);
+  return { maxPoints, deducted };
+}
+
+function computeCategoryScore(checks) {
+  const scorable = (checks || []).filter(c => c.status !== 'error' && c.status !== 'unavailable');
+  if (scorable.length === 0) return null;
+  let totalDeducted = 0;
+  for (const c of scorable) totalDeducted += getCheckPoints(c).deducted;
+  return Math.max(CATEGORY_SCORE_FLOOR, Math.min(100, Math.round(100 - totalDeducted)));
+}
+
+/** Escapes text for safe insertion into innerHTML. Evidence/description
+ * content originates from arbitrary scanned websites, so anything from a
+ * check object must be escaped before going into a template string. */
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 class SiteSentinelApp {
   constructor() {
@@ -85,7 +95,11 @@ class SiteSentinelApp {
     this.analyzedUrl = document.getElementById('analyzedUrl');
     this.newAnalysisBtn = document.getElementById('newAnalysisBtn');
     this.exportBtn = document.getElementById('exportBtn');
+    this.exportJsonBtn = document.getElementById('exportJsonBtn');
     this.submitBtn = this.form.querySelector('button[type="submit"]');
+    // Evidence modal
+    this.checkModal = document.getElementById('checkModal');
+    this.modalBody = document.getElementById('modalBody');
     // AI elements
     this.aiSection = document.getElementById('aiSection');
     this.aiQuestion = document.getElementById('aiQuestion');
@@ -105,13 +119,40 @@ class SiteSentinelApp {
     this.form.addEventListener('submit', (e) => this.handleSubmit(e));
     this.newAnalysisBtn?.addEventListener('click', () => this.resetForm());
     this.exportBtn?.addEventListener('click', () => this.exportReport());
-    
+    this.exportJsonBtn?.addEventListener('click', () => this.exportJson());
+
     // Close modal
-    const modal = document.getElementById('checkModal');
-    const modalClose = document.querySelector('.modal-close');
-    modalClose?.addEventListener('click', () => modal.style.display = 'none');
-    modal?.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
+    const modalClose = this.checkModal?.querySelector('.modal-close');
+    modalClose?.addEventListener('click', () => this.closeCheckModal());
+    this.checkModal?.addEventListener('click', (e) => {
+      if (e.target === this.checkModal) this.closeCheckModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.checkModal?.style.display !== 'none') this.closeCheckModal();
+    });
+    // "Show all N" reveals the rest of a capped evidence list (already present
+    // in the DOM, just hidden - see renderCheckModalContent).
+    this.modalBody?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.evidence-show-all');
+      if (!btn) return;
+      btn.parentElement?.querySelectorAll('.evidence-extra').forEach(el => el.classList.remove('hidden'));
+      btn.remove();
+    });
+
+    // Open the evidence modal for any check item, or toggle a category's score
+    // breakdown - both are delegated from the grid since cards are re-rendered
+    // on every analysis.
+    this.categoriesGrid.addEventListener('click', (e) => {
+      const breakdownToggle = e.target.closest('.score-breakdown-toggle');
+      if (breakdownToggle) {
+        breakdownToggle.closest('.category-card')?.querySelector('.score-breakdown')?.classList.toggle('collapsed');
+        return;
+      }
+      const item = e.target.closest('.check-item[data-check-idx]');
+      if (!item) return;
+      const catIdx = parseInt(item.dataset.catIdx, 10);
+      const checkIdx = parseInt(item.dataset.checkIdx, 10);
+      this.openCheckModal(catIdx, checkIdx);
     });
 
     // AI quick prompts
@@ -268,9 +309,9 @@ class SiteSentinelApp {
       alert('Invalid categories format');
       return;
     }
-    
-    categories.forEach(category => {
-      const card = this.createCategoryCard(category);
+
+    categories.forEach((category, catIdx) => {
+      const card = this.createCategoryCard(category, catIdx);
       this.categoriesGrid.appendChild(card);
     });
 
@@ -282,19 +323,19 @@ class SiteSentinelApp {
     this.toggleAIVisibility(true);
   }
 
-  createCategoryCard(category) {
+  createCategoryCard(category, catIdx) {
     // Defensive checks
     if (!category || typeof category.score === 'undefined') {
       console.warn('Invalid category:', category);
       return document.createElement('div');
     }
-    
+
     const card = document.createElement('div');
     card.className = 'category-card';
-    
+
     const scoreColor = this.getScoreColor(category.score);
     let checks = category.checks || [];
-    
+
     // Sort checks: important (critical/high) first, then by status (fail > warn > info > pass)
     const statusOrder = { fail: 0, error: 0, warn: 1, info: 2, pass: 3 };
     checks = [...checks].sort((a, b) => {
@@ -303,19 +344,21 @@ class SiteSentinelApp {
       if (aImportant !== bImportant) return aImportant - bImportant;
       return (statusOrder[a.status] || 3) - (statusOrder[b.status] || 3);
     });
-    
+
     // Separate important and other checks
     const importantChecks = checks.filter(c => IMPORTANT_CHECKS.has(c.name));
     const otherChecks = checks.filter(c => !IMPORTANT_CHECKS.has(c.name));
-    
+
     // Check if this is External Links category
     const isExternalLinks = category.category === 'External Links';
     const hasExternalLinks = isExternalLinks && category.scoredLinks && category.scoredLinks.length > 0;
-    
+
+    const categoryName = escapeHtml(category.category || 'Unknown');
+
     card.innerHTML = `
       <div class="category-card-header">
         <div class="category-title">
-          <h3>${category.category || 'Unknown'}</h3>
+          <h3>${categoryName}</h3>
           <div class="category-score">${importantChecks.length} key checks · ${otherChecks.length} additional</div>
         </div>
         <div class="category-badge" style="background: ${scoreColor}">
@@ -323,11 +366,13 @@ class SiteSentinelApp {
         </div>
       </div>
       <div class="category-body">
+        <button type="button" class="score-breakdown-toggle">Score breakdown <span class="toggle-icon">▾</span></button>
+        ${this.renderScoreBreakdown(category)}
         ${importantChecks.length > 0 ? `
           <div class="checks-section important-checks">
             <div class="section-label"><svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Key Checks</div>
             <ul class="check-list">
-              ${importantChecks.map(check => this.createCheckItem(check, true)).join('')}
+              ${importantChecks.map(check => this.createCheckItem(check, true, catIdx, category)).join('')}
             </ul>
           </div>
         ` : ''}
@@ -337,7 +382,7 @@ class SiteSentinelApp {
               <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Additional Checks <span class="toggle-icon">▼</span>
             </div>
             <ul class="check-list">
-              ${otherChecks.map(check => this.createCheckItem(check, false)).join('')}
+              ${otherChecks.map(check => this.createCheckItem(check, false, catIdx, category)).join('')}
             </ul>
           </div>
         ` : ''}
@@ -348,7 +393,7 @@ class SiteSentinelApp {
     // Toggle expand/collapse
     card.querySelector('.category-card-header').addEventListener('click', () => {
       card.classList.toggle('expanded');
-      card.querySelector('.category-body').style.display = 
+      card.querySelector('.category-body').style.display =
         card.classList.contains('expanded') ? 'block' : 'none';
     });
 
@@ -356,6 +401,47 @@ class SiteSentinelApp {
     card.classList.add('expanded');
 
     return card;
+  }
+
+  /**
+   * Collapsible table listing every check in the category and exactly how
+   * many points it added or removed, so it's possible to see precisely why
+   * a category score dropped (or didn't).
+   */
+  renderScoreBreakdown(category) {
+    const checks = category.checks || [];
+    if (checks.length === 0) return '';
+
+    const rows = checks.map(c => {
+      const max = c.maxPoints || 0;
+      const deducted = c.pointsDeducted || 0;
+      const delta = deducted > 0 ? `−${deducted}` : (max > 0 ? '0' : '—');
+      return `
+        <tr class="score-breakdown-row">
+          <td class="sb-check-name">${this.getStatusIcon(c.status)} ${escapeHtml(c.name)}</td>
+          <td class="sb-status status-${escapeHtml(c.status)}">${escapeHtml((c.status || '').toUpperCase())}</td>
+          <td class="sb-points">${delta}${max > 0 ? ` / ${max}` : ''}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const totalMax = checks.reduce((s, c) => s + (c.maxPoints || 0), 0);
+    const totalDeducted = checks.reduce((s, c) => s + (c.pointsDeducted || 0), 0);
+    const rawScore = Math.round(100 - totalDeducted);
+    const floorNote = rawScore < category.score
+      ? `<p class="score-breakdown-note">A floor is applied so a small number of findings can't read as a total 0/100 - the raw deduction here would have put this category at ${Math.max(0, rawScore)}.</p>`
+      : '';
+
+    return `
+      <div class="score-breakdown collapsed">
+        <table class="score-breakdown-table">
+          <thead><tr><th>Check</th><th>Status</th><th>Points</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="score-breakdown-total">Total deducted: ${totalDeducted} pts from a 100-point baseline${totalMax ? ` (${totalMax} pts were at stake across ${checks.length} checks)` : ''} → ${category.score}/100</p>
+        ${floorNote}
+      </div>
+    `;
   }
 
   createExternalLinksSection(externalLinks) {
@@ -409,47 +495,218 @@ class SiteSentinelApp {
     }
   }
 
-  createCheckItem(check, isImportant = false) {
+  createCheckItem(check, isImportant, catIdx, category) {
     const statusIcon = this.getStatusIcon(check.status);
-    const detailPage = CHECK_DETAIL_PAGES[check.name];
-    const hasDetailPage = !!detailPage;
-    const showLearnMore = isImportant && hasDetailPage;
-    
-    // Store check data for the detail page
-    const checkData = encodeURIComponent(JSON.stringify({
-      name: check.name,
-      status: check.status,
-      description: check.description,
-      url: this.analysisData?.url || ''
-    }));
-    
-    if (showLearnMore) {
+    // Checks are rendered from a sorted copy of category.checks - look up the
+    // original index so the click handler can find this exact check object
+    // again via this.analysisData.categories[catIdx].checks[originalIdx].
+    const originalIdx = (category.checks || []).indexOf(check);
+    const name = escapeHtml(check.name);
+    const description = escapeHtml(check.description);
+    const pointsBadge = check.maxPoints > 0
+      ? `<span class="points-badge status-${escapeHtml(check.status)}">${check.pointsDeducted > 0 ? '−' + check.pointsDeducted : '0'} pt${check.maxPoints === 1 ? '' : 's'}</span>`
+      : '';
+
+    if (isImportant) {
       return `
-        <li class="check-item check-item-important">
+        <li class="check-item check-item-important" data-cat-idx="${catIdx}" data-check-idx="${originalIdx}">
           <div class="check-icon">${statusIcon}</div>
           <div class="check-details">
             <div class="check-name-row">
-              <span class="check-name">${check.name}</span>
+              <span class="check-name">${name}</span>
               <span class="importance-badge">Important</span>
+              ${pointsBadge}
             </div>
-            <div class="check-description">${check.description}</div>
-            <a href="${detailPage}?data=${checkData}" class="learn-more-btn" onclick="event.stopPropagation();">
-              Learn More →
-            </a>
+            <div class="check-description">${description}</div>
+            <span class="learn-more-btn">View evidence →</span>
           </div>
         </li>
       `;
     }
-    
+
     return `
-      <li class="check-item ${hasDetailPage ? 'check-item-clickable' : ''}" ${hasDetailPage ? `onclick="window.location.href='${detailPage}'"` : ''}>
+      <li class="check-item check-item-clickable" data-cat-idx="${catIdx}" data-check-idx="${originalIdx}">
         <div class="check-icon">${statusIcon}</div>
         <div class="check-details">
-          <div class="check-name">${check.name}</div>
-          <div class="check-description">${check.description}</div>
+          <div class="check-name-row">
+            <span class="check-name">${name}</span>
+            ${pointsBadge}
+          </div>
+          <div class="check-description">${description}</div>
         </div>
       </li>
     `;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Evidence modal
+  // ─────────────────────────────────────────────────────────────
+
+  openCheckModal(catIdx, checkIdx) {
+    const category = this.analysisData?.categories?.[catIdx];
+    const check = category?.checks?.[checkIdx];
+    if (!this.checkModal || !this.modalBody || !category || !check) return;
+    this.modalBody.innerHTML = this.renderCheckModalContent(check, category);
+    this.checkModal.style.display = 'flex';
+  }
+
+  closeCheckModal() {
+    if (this.checkModal) this.checkModal.style.display = 'none';
+  }
+
+  renderCheckModalContent(check, category) {
+    const evidence = check.evidence || [];
+    const visibleCount = 20;
+    const confidence = check.confidence || 'medium';
+
+    const otherChecks = (category.checks || []).filter(c => c !== check);
+    const scoreWithout = computeCategoryScore(otherChecks);
+    const scoreImpactLine = check.pointsDeducted > 0
+      ? `<strong>−${check.pointsDeducted} of ${check.maxPoints} possible points</strong> from ${escapeHtml(category.category)}${scoreWithout !== null ? ` (category: ${scoreWithout} → ${category.score})` : ` (category: ${category.score}/100)`}`
+      : `No points deducted from ${escapeHtml(category.category)} (category: ${category.score}/100)`;
+
+    const evidenceHtml = evidence.length === 0
+      ? '<p class="modal-empty-note">No structured evidence captured for this check.</p>'
+      : `
+        <div class="evidence-list">
+          ${evidence.map((item, i) => `<div class="evidence-item${i >= visibleCount ? ' evidence-extra hidden' : ''}">${this.renderEvidenceItem(item)}</div>`).join('')}
+        </div>
+        ${evidence.length > visibleCount ? `<button type="button" class="btn btn-outline evidence-show-all">Show all ${evidence.length}</button>` : ''}
+      `;
+
+    const hasStructuredFields = check.method || evidence.length > 0 || check.risk || check.fix;
+
+    return `
+      <div class="modal-check-header">
+        <span class="modal-check-icon status-${escapeHtml(check.status)}">${this.getStatusIcon(check.status)}</span>
+        <div>
+          <h2 class="modal-check-title">${escapeHtml(check.name)}</h2>
+          <div class="modal-check-badges">
+            <span class="modal-badge status-${escapeHtml(check.status)}">${escapeHtml((check.status || 'unknown').toUpperCase())}</span>
+            <span class="modal-badge confidence-${escapeHtml(confidence)}">Confidence: ${escapeHtml(confidence)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h4>Score impact</h4>
+        <p>${scoreImpactLine}</p>
+      </div>
+
+      <div class="modal-section">
+        <h4>Verdict</h4>
+        <p>${escapeHtml(check.description)}</p>
+      </div>
+
+      ${check.method ? `
+        <div class="modal-section">
+          <h4>What we checked</h4>
+          <p>${escapeHtml(check.method)}</p>
+        </div>
+      ` : ''}
+
+      <div class="modal-section">
+        <h4>Evidence${evidence.length ? ` (${Math.min(visibleCount, evidence.length)} of ${evidence.length})` : ''}</h4>
+        ${evidenceHtml}
+      </div>
+
+      ${check.risk ? `
+        <div class="modal-section">
+          <h4>Why this matters</h4>
+          <p>${escapeHtml(check.risk)}</p>
+        </div>
+      ` : ''}
+
+      ${check.fix ? `
+        <div class="modal-section">
+          <h4>How to fix</h4>
+          ${check.fix.includes('\n') ? `<pre class="modal-fix-snippet">${escapeHtml(check.fix)}</pre>` : `<p>${escapeHtml(check.fix)}</p>`}
+        </div>
+      ` : ''}
+
+      ${check.confidenceNote ? `
+        <div class="modal-section modal-confidence-note">
+          <h4>Possible false positive?</h4>
+          <p>${escapeHtml(check.confidenceNote)}</p>
+        </div>
+      ` : ''}
+
+      ${!hasStructuredFields ? `
+        <p class="modal-empty-note">Detailed evidence isn't available for this check type yet - showing the summary and point impact only.</p>
+      ` : ''}
+    `;
+  }
+
+  renderEvidenceItem(item) {
+    if (!item || !item.type) return `<pre class="evidence-snippet">${escapeHtml(JSON.stringify(item))}</pre>`;
+
+    switch (item.type) {
+      case 'headers': {
+        const headers = item.headers || {};
+        const keys = Object.keys(headers);
+        const highlight = (item.highlightHeader || '').toLowerCase();
+        const rows = keys.length
+          ? keys.map(k => `<tr class="${k.toLowerCase() === highlight ? 'evidence-header-highlight' : ''}"><td>${escapeHtml(k)}</td><td>${escapeHtml(headers[k])}</td></tr>`).join('')
+          : '<tr><td colspan="2">No headers captured</td></tr>';
+        const missingNote = highlight && item.present === false
+          ? `<p class="evidence-missing-header">Header "${escapeHtml(item.highlightHeader)}" is <strong>missing</strong> from the response.</p>`
+          : '';
+        const chain = (item.redirectChain || []).map(h => `${escapeHtml(h.url)} (${escapeHtml(h.status)})`).join(' → ');
+        return `
+          <div class="evidence-headers">
+            <p class="evidence-meta">Final URL: <code>${escapeHtml(item.finalUrl)}</code> · Status: <code>${escapeHtml(item.statusCode)}</code></p>
+            ${chain ? `<p class="evidence-meta">Redirects: ${chain}${item.finalUrl ? ` → ${escapeHtml(item.finalUrl)}` : ''}</p>` : ''}
+            ${missingNote}
+            <table class="evidence-headers-table"><tbody>${rows}</tbody></table>
+          </div>
+        `;
+      }
+      case 'dom':
+        return `
+          <div class="evidence-dom">
+            ${item.label ? `<p class="evidence-meta">${escapeHtml(item.label)}</p>` : ''}
+            <p class="evidence-meta">Selector: <code>${escapeHtml(item.selector)}</code>${item.line ? ` · Line ${escapeHtml(item.line)}, Col ${escapeHtml(item.column)}` : ''}</p>
+            <pre class="evidence-snippet"><code>${escapeHtml(item.snippet)}</code></pre>
+          </div>
+        `;
+      case 'pattern':
+      case 'note':
+        return `
+          <div class="evidence-pattern">
+            ${item.matchedRule ? `<p class="evidence-meta">Rule: ${escapeHtml(item.matchedRule)}</p>` : ''}
+            ${item.matchedText ? `<p class="evidence-meta">Matched: <code>${escapeHtml(item.matchedText)}</code></p>` : ''}
+            <pre class="evidence-snippet">${escapeHtml(item.context)}</pre>
+          </div>
+        `;
+      case 'script':
+        return `
+          <div class="evidence-script">
+            <p class="evidence-meta">
+              ${item.isInline ? 'Inline script' : `<code>${escapeHtml(item.src)}</code>`}
+              <span class="evidence-classification classification-${escapeHtml(item.classification)}">${escapeHtml(item.classification)}</span>
+            </p>
+            <p class="evidence-meta">${escapeHtml(item.classificationReason)}</p>
+            ${!item.isInline ? `<p class="evidence-meta">async=${item.attributes?.async ? 'yes' : 'no'} · defer=${item.attributes?.defer ? 'yes' : 'no'} · integrity=${item.attributes?.integrity ? 'yes' : 'no'} · crossorigin=${escapeHtml(item.attributes?.crossorigin || 'none')}</p>` : ''}
+            ${item.inlineSnippet ? `<pre class="evidence-snippet"><code>${escapeHtml(item.inlineSnippet)}</code></pre>` : ''}
+          </div>
+        `;
+      case 'mixed-content':
+        return `
+          <div class="evidence-mixed">
+            <p class="evidence-meta"><code>${escapeHtml(item.url)}</code></p>
+            <p class="evidence-meta">Tag: &lt;${escapeHtml(item.tag)}&gt; attribute: ${escapeHtml(item.attribute)} · <span class="evidence-classification classification-${escapeHtml(item.activity)}">${escapeHtml(item.activity)}</span></p>
+          </div>
+        `;
+      case 'link':
+        return `
+          <div class="evidence-link">
+            <p class="evidence-meta"><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.url)}</a></p>
+            <p class="evidence-meta">Source: <span class="evidence-classification">${escapeHtml(item.sourceType)}</span>${item.sourceDetail ? ` — ${escapeHtml(item.sourceDetail)}` : ''}</p>
+          </div>
+        `;
+      default:
+        return `<pre class="evidence-snippet">${escapeHtml(JSON.stringify(item))}</pre>`;
+    }
   }
 
   getStatusIcon(status) {
@@ -527,6 +784,49 @@ class SiteSentinelApp {
     URL.revokeObjectURL(url);
   }
 
+  exportJson() {
+    if (!this.analysisData) {
+      alert('No analysis data to export');
+      return;
+    }
+
+    const blob = new Blob([JSON.stringify(this.analysisData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SiteSentinel-Report-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  getStatusText(status) {
+    const labels = { pass: '[PASS]', warn: '[WARN]', info: '[INFO]', fail: '[FAIL]', error: '[ERROR]' };
+    return labels[status] || '[?]';
+  }
+
+  formatEvidenceForText(item) {
+    if (!item) return '';
+    switch (item.type) {
+      case 'headers':
+        return `[headers] finalUrl=${item.finalUrl} status=${item.statusCode}${item.highlightHeader ? ` | ${item.highlightHeader}=${item.present ? (item.headers?.[item.highlightHeader] || 'present') : 'MISSING'}` : ''}`;
+      case 'dom':
+        return `[dom] ${item.selector}${item.line ? ` (line ${item.line}, col ${item.column})` : ''}: ${item.snippet}`;
+      case 'pattern':
+      case 'note':
+        return `[${item.type}] ${item.matchedRule ? item.matchedRule + ' | ' : ''}${item.matchedText ? `matched "${item.matchedText}" | ` : ''}context: ${item.context}`;
+      case 'script':
+        return `[script] ${item.isInline ? 'inline' : item.src} (${item.classification}: ${item.classificationReason})`;
+      case 'mixed-content':
+        return `[mixed-content] ${item.url} <${item.tag} ${item.attribute}> (${item.activity})`;
+      case 'link':
+        return `[link] ${item.url} (source: ${item.sourceType}${item.sourceDetail ? `, ${item.sourceDetail}` : ''})`;
+      default:
+        return JSON.stringify(item);
+    }
+  }
+
   generateReport() {
     const data = this.analysisData;
     let report = `
@@ -545,12 +845,26 @@ Overall Score: ${data.overall.score}/100 (${data.overall.label})
     data.categories.forEach(category => {
       report += `\n${category.category} - ${category.score}/100\n`;
       report += '─'.repeat(60) + '\n\n';
-      
+
       category.checks.forEach(check => {
-        const icon = this.getStatusIcon(check.status);
-        report += `${icon} ${check.name}\n`;
-        report += `   Status: ${check.status.toUpperCase()}\n`;
-        report += `   ${check.description}\n\n`;
+        report += `${this.getStatusText(check.status)} ${check.name}\n`;
+        let statusLine = `   Status: ${(check.status || '').toUpperCase()}`;
+        if (check.maxPoints) statusLine += ` | Points: -${check.pointsDeducted || 0}/${check.maxPoints}`;
+        if (check.confidence) statusLine += ` | Confidence: ${check.confidence}`;
+        report += statusLine + '\n';
+        report += `   ${check.description}\n`;
+        if (check.method) report += `   Method: ${check.method}\n`;
+        if (check.risk) report += `   Why it matters: ${check.risk}\n`;
+        if (check.fix) report += `   Fix: ${check.fix.replace(/\n/g, '\n         ')}\n`;
+        if (check.confidenceNote) report += `   Note: ${check.confidenceNote}\n`;
+        if (check.evidence && check.evidence.length > 0) {
+          report += `   Evidence (${check.evidence.length}):\n`;
+          check.evidence.slice(0, 20).forEach((ev, i) => {
+            report += `     ${i + 1}. ${this.formatEvidenceForText(ev)}\n`;
+          });
+          if (check.evidence.length > 20) report += `     ... and ${check.evidence.length - 20} more (see JSON export for the full list)\n`;
+        }
+        report += '\n';
       });
     });
 
