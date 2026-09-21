@@ -9,11 +9,16 @@ const { calculateCategoryScore } = require('../utils/score-calculator.util');
 
 class LinkAnalysisCheck {
   constructor() {
+    // Used only to decide which external links are worth probing further (via a HEAD
+    // request) for their real redirect destination - this is deliberately broad since
+    // a false positive here just means "check this link", not "flag this site".
+    // NOTE: previously also included 'out.', 'tracking', and 'redirect' as bare
+    // substrings, which matched huge numbers of unrelated legitimate URLs (e.g.
+    // "out." matches "checkout.stripe.com", "tracking" matches any analytics script
+    // path, "redirect" matches normal OAuth "redirect_uri" params) - removed.
     this.suspiciousRedirectDomains = [
-      'bit.ly', 'tinyurl', 'short.link', 'goo.gl', 
-      'ow.ly', 'adf.ly', 'clickbank', 'amazon-click',
-      'click/', '.click', 'redirect', 'out.', '/go?',
-      'tracking', 'analytics-redirect'
+      'bit.ly', 'tinyurl', 'short.link', 'goo.gl',
+      'ow.ly', 'adf.ly', 'clickbank', 'amazon-click', '.click', '/go?'
     ];
   }
 
@@ -206,7 +211,12 @@ class LinkAnalysisCheck {
         score: score,
         status: score === null ? 'unavailable' : 'available',
         checks,
-        suspiciousRedirectsDetected: suspiciousLinks.length > 0
+        // Matches the 'fail' threshold used for the "Suspicious External Redirects"
+        // check above. This flag caps the *entire site's* overall score at 25/100
+        // (see analyze.route.js), so it needs multiple corroborating matches rather
+        // than a single link - one flagged link (which can itself be a heuristic
+        // false positive) is not strong enough evidence to nuke the whole report.
+        suspiciousRedirectsDetected: suspiciousLinks.length > 3
       };
     } catch (error) {
       checks.push({
@@ -236,20 +246,18 @@ class LinkAnalysisCheck {
 
   isSuspiciousDomain(url) {
     const urlLower = url.toLowerCase();
-    
-    // Check for known phishing/malware domains
-    const suspiciousDomainPatterns = [
+
+    // High-confidence patterns: safe to flag even when we can't independently verify
+    // the destination (e.g. when a HEAD request fails). Restricted to specific
+    // known-bad TLDs, brand-impersonation redirect patterns, and crypto/gambling
+    // redirect chains.
+    // NOTE: previously included bare `/tracking/i` and `/analytics.*redirect/i`,
+    // which matched almost any analytics or tracking-pixel URL on the web (extremely
+    // common and legitimate) - removed as false-positive generators.
+    const highConfidencePatterns = [
       /\.click($|\/)/i,
       /\.download($|\/)/i,
-      /bit\.ly/i,
-      /tinyurl/i,
-      /adf\.ly/i,
-      /short\.link/i,
-      /goo\.gl/i,
-      /ow\.ly/i,
       /clickbank/i,
-      /tracking/i,
-      /analytics.*redirect/i,
       // Crypto/gambling redirect patterns
       /whitebit\.com/i,
       /binance.*redirect/i,
@@ -261,7 +269,19 @@ class LinkAnalysisCheck {
       /sports.*betting/i
     ];
 
-    return suspiciousDomainPatterns.some(pattern => pattern.test(urlLower));
+    return highConfidencePatterns.some(pattern => pattern.test(urlLower));
+  }
+
+  /**
+   * Known URL-shortener services. This is a much weaker signal than
+   * isSuspiciousDomain() - legitimate businesses routinely use these services for
+   * their own promotional/social links, so a shortener alone should never be treated
+   * as proof of a malicious redirect, only as a reason to check where it actually goes.
+   */
+  isKnownShortener(url) {
+    const urlLower = url.toLowerCase();
+    const shorteners = ['bit.ly', 'tinyurl', 'adf.ly', 'short.link', 'goo.gl', 'ow.ly'];
+    return shorteners.some(s => urlLower.includes(s));
   }
 }
 

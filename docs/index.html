@@ -35,19 +35,12 @@
   </div>
 
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:2000;align-items:center;justify-content:center;">
-    <div class="loading-spinner" style="display:flex;flex-direction:column;align-items:center;">
-      <div style="border:6px solid #f3f3f3;border-top:6px solid #2d2d2d;border-radius:50%;width:60px;height:60px;animation:spin 1s linear infinite;"></div>
-      <div style="margin-top:18px;color:#fff;font-size:1.2em;font-weight:500;">Analyzing...</div>
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-overlay-content">
+      <div class="loading-overlay-spinner"></div>
+      <div class="loading-overlay-text">Analyzing...</div>
     </div>
   </div>
-
-  <style>
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
 
   <!-- Hero Section -->
   <section class="hero">
@@ -96,9 +89,9 @@
           <div class="score-content">
             <span class="score-number" id="overallScore">0</span>
             <span class="score-label" id="scoreLabel">Loading</span>
-            <div id="credHarvestWarning" style="display:none;position:relative;z-index:10;margin-top:12px;">
-              <div style="background:#fffbe6;border:1px solid #f59e0b;color:#b45309;padding:12px 18px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.07);font-size:1.05em;display:flex;align-items:center;gap:10px;">
-                <svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+            <div id="credHarvestWarning" class="cred-harvest-warning">
+              <div class="cred-harvest-warning-box">
+                <svg class="cred-harvest-warning-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
                 <span id="credHarvestWarningText"></span>
               </div>
             </div>

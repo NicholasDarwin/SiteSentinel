@@ -20,23 +20,27 @@ class SafetyCheck {
       let riskScore = 0;
 
       // === HIGH-RISK DOWNLOAD LANGUAGE PATTERNS ===
+      // Weights are intentionally modest for phrases that also appear on legitimate
+      // software/download pages (browsers, open-source releases, CDN mirrors, etc).
+      // No single common phrase should be able to push riskScore near the fail
+      // threshold on its own - only combinations of several signals should.
       const deceptiveDownloadPhrases = [
-        { pattern: /your\s+(free\s+)?download\s+is\s+ready/i, weight: 30, signal: 'Deceptive "download ready" messaging' },
-        { pattern: /complete\s+download/i, weight: 25, signal: 'Generic "complete download" prompt' },
-        { pattern: /download\s+now/i, weight: 15, signal: '"Download Now" call-to-action' },
-        { pattern: /setup\s+file/i, weight: 25, signal: 'Generic "setup file" reference' },
-        { pattern: /click\s+(here\s+)?to\s+download/i, weight: 20, signal: 'Click-to-download prompt' },
-        { pattern: /start\s+download/i, weight: 20, signal: '"Start download" button' },
-        { pattern: /downloading\s+will\s+start/i, weight: 25, signal: 'Auto-download messaging' },
-        { pattern: /file\s+is\s+ready/i, weight: 25, signal: 'Generic "file ready" messaging' },
-        { pattern: /install(er)?\s+file/i, weight: 25, signal: 'Generic "installer" reference' },
-        { pattern: /free\s+installer/i, weight: 30, signal: 'Free installer claim' },
-        { pattern: /get\s+your\s+(free\s+)?file/i, weight: 25, signal: 'Generic file delivery language' },
-        { pattern: /download\s+manager/i, weight: 20, signal: 'Download manager reference' },
-        { pattern: /fast(er)?\s+download/i, weight: 20, signal: 'Fast download claim' },
-        { pattern: /secure\s+download/i, weight: 15, signal: 'False security claim on download' },
-        { pattern: /direct\s+download/i, weight: 15, signal: 'Direct download claim' },
-        { pattern: /one\s+click\s+download/i, weight: 20, signal: 'One-click download claim' }
+        { pattern: /your\s+(free\s+)?download\s+is\s+ready/i, weight: 20, signal: 'Deceptive "download ready" messaging' },
+        { pattern: /complete\s+download/i, weight: 15, signal: 'Generic "complete download" prompt' },
+        { pattern: /download\s+now/i, weight: 6, signal: '"Download Now" call-to-action' },
+        { pattern: /setup\s+file/i, weight: 12, signal: 'Generic "setup file" reference' },
+        { pattern: /click\s+(here\s+)?to\s+download/i, weight: 10, signal: 'Click-to-download prompt' },
+        { pattern: /start\s+download/i, weight: 8, signal: '"Start download" button' },
+        { pattern: /downloading\s+will\s+start/i, weight: 18, signal: 'Auto-download messaging' },
+        { pattern: /file\s+is\s+ready/i, weight: 15, signal: 'Generic "file ready" messaging' },
+        { pattern: /install(er)?\s+file/i, weight: 10, signal: 'Generic "installer" reference' },
+        { pattern: /free\s+installer/i, weight: 20, signal: 'Free installer claim' },
+        { pattern: /get\s+your\s+(free\s+)?file/i, weight: 15, signal: 'Generic file delivery language' },
+        { pattern: /download\s+manager/i, weight: 10, signal: 'Download manager reference' },
+        { pattern: /fast(er)?\s+download/i, weight: 6, signal: 'Fast download claim' },
+        { pattern: /secure\s+download/i, weight: 6, signal: 'False security claim on download' },
+        { pattern: /direct\s+download/i, weight: 6, signal: 'Direct download claim' },
+        { pattern: /one\s+click\s+download/i, weight: 10, signal: 'One-click download claim' }
       ];
 
       for (const { pattern, weight, signal } of deceptiveDownloadPhrases) {
@@ -89,18 +93,25 @@ class SafetyCheck {
       }
 
       // === DOMAIN ANALYSIS ===
+      // Only single-purpose file-sharing/dropper domains here - deliberately excludes
+      // generic dictionary words like "get"/"file"/"soft"/"setup" which appear in the
+      // names of countless legitimate sites (getpocket.com, filezilla.org, etc) and
+      // were previously causing false positives on unrelated domains.
       const suspiciousDownloadDomains = [
-        'getflux', 'download', 'file', 'soft', 'installer', 'setup', 
-        'get', 'grab', 'fetch', 'dlfile', 'filehost', 'upload',
-        'mediafire', '4shared', 'zippyshare', 'uploadhaven'
+        'getflux', 'dlfile', 'filehost', 'uploadhaven',
+        'mediafire', '4shared', 'zippyshare'
       ];
-      
+
       const domainLower = hostname.toLowerCase();
-      for (const keyword of suspiciousDownloadDomains) {
-        if (domainLower.includes(keyword)) {
-          riskScore += 20;
-          signals.push(`Domain contains "${keyword}" - common in file-dropper networks`);
-          break;
+      // Only count a domain-name match as a signal if we already have other
+      // page-content evidence - the domain name alone is too weak on its own.
+      if (signals.length > 0) {
+        for (const keyword of suspiciousDownloadDomains) {
+          if (domainLower.includes(keyword)) {
+            riskScore += 15;
+            signals.push(`Domain contains "${keyword}" - common in file-dropper networks`);
+            break;
+          }
         }
       }
 
@@ -115,12 +126,12 @@ class SafetyCheck {
       }
 
       // === EXECUTABLE DOWNLOAD DETECTION ===
+      // Only match executables referenced by actual href/download attributes - a bare
+      // ".exe" mention anywhere in the page text (e.g. a tech article, changelog, or
+      // system-requirements blurb) is not evidence of an executable being served.
       const executablePatterns = [
         /href\s*=\s*["'][^"']*\.(exe|msi|dmg|pkg|deb|rpm|appimage|bat|cmd|ps1|vbs|js)["']/i,
-        /download\s*=\s*["'][^"']*\.(exe|msi|dmg|pkg|bat|cmd)["']/i,
-        /\.exe\b/i,
-        /\.msi\b/i,
-        /\.dmg\b/i
+        /download\s*=\s*["'][^"']*\.(exe|msi|dmg|pkg|bat|cmd)["']/i
       ];
 
       let hasExecutable = false;
@@ -231,7 +242,13 @@ class SafetyCheck {
     try {
       // Check for login forms on suspicious domains
       const hasLoginForm = /type\s*=\s*["']?password/i.test(bodyLower);
-      const hasSensitiveFields = /(social.*security|ssn|credit.*card|card.*number|cvv|expir)/i.test(bodyLower);
+      // Only flag "sensitive fields" when there's an actual <input> element whose
+      // name/id/placeholder/autocomplete attribute references a card number, CVV, or
+      // SSN - not just those words appearing anywhere in the page text. The previous
+      // version matched bare "expir" against any page mentioning "expires"/
+      // "expiration" (session timeouts, sale countdowns, subscription notices, etc.),
+      // which made this fire on a huge fraction of ordinary websites.
+      const hasSensitiveFields = /<input[^>]*(?:name|id|placeholder|autocomplete)\s*=\s*["'][^"']*(social.?security|ssn|credit.?card|card.?number|cc.?number|cvv|cvc|card.?cvc)[^"']*["']/i.test(bodyLower);
       
       // Known legitimate login domains
       const legitimateLoginDomains = [
@@ -322,7 +339,16 @@ class SafetyCheck {
       }
       
       // 3. Malware / Phishing Indicators - Combine all detection methods
+      //
+      // Detection sources vary a lot in reliability. Deceptive-download content
+      // analysis, explicit scam-content matches, and Google Safe Browsing hits are
+      // high confidence - they're allowed to fail this check and zero out the whole
+      // report. The local heuristic checks (URL-shape typosquat detection, domain
+      // name pattern matching) are comparatively weak signals prone to false
+      // positives, so they only ever downgrade the check to a warning: still visible
+      // to the user, but they can't single-handedly tank an otherwise-clean report.
       let malwareDetected = deceptiveDownload.isDeceptive || scamDetection.isScam;
+      let highConfidence = malwareDetected;
       let detectionDetails = deceptiveDownload.reason || scamDetection.reason;
       let detectionSignals = deceptiveDownload.signals || [];
 
@@ -343,19 +369,22 @@ class SafetyCheck {
           const gsResp = await axios.post(gsUrl, gsPayload, { timeout: 10000 });
           if (gsResp.data && Object.keys(gsResp.data).length > 0) {
             malwareDetected = true;
+            highConfidence = true;
             detectionDetails = 'DANGER: Google Safe Browsing flagged this site for malware or phishing';
           }
-        } catch (err) { 
+        } catch (err) {
           logger.debug('Google Safe Browsing API not available:', err.message);
-          /* Fall back to local detection */ 
+          /* Fall back to local detection */
         }
       }
 
-      // Try local phishing detection
+      // Try local phishing detection (weak signal - warn only, never fails on its own)
+      let lowConfidenceDetected = false;
       if (!malwareDetected) {
         try {
-          malwareDetected = this.detectPhishingIndicators(url, hostname);
-          if (malwareDetected) {
+          const phishingMatch = this.detectPhishingIndicators(url, hostname);
+          if (phishingMatch) {
+            lowConfidenceDetected = true;
             detectionDetails = 'WARNING: Suspicious URL patterns detected (possible phishing/scam site)';
           }
         } catch (phishErr) {
@@ -363,12 +392,12 @@ class SafetyCheck {
         }
       }
 
-      // Try domain reputation check
-      if (!malwareDetected) {
+      // Try domain reputation check (weak signal - warn only, never fails on its own)
+      if (!malwareDetected && !lowConfidenceDetected) {
         try {
           const domainCheck = this.checkDomainReputation(hostname, url);
           if (domainCheck.isSuspicious) {
-            malwareDetected = true;
+            lowConfidenceDetected = true;
             detectionDetails = `WARNING: ${domainCheck.reason}`;
           }
         } catch (domainErr) {
@@ -378,19 +407,21 @@ class SafetyCheck {
 
       // Build comprehensive description for malware check
       let malwareDescription = 'No malware or phishing indicators detected';
-      if (malwareDetected) {
+      if (malwareDetected || lowConfidenceDetected) {
         malwareDescription = detectionDetails;
         if (detectionSignals.length > 0) {
           malwareDescription += ` | Signals: ${detectionSignals.slice(0, 5).join('; ')}`;
         }
       }
 
+      const malwareCheckStatus = highConfidence ? 'fail' : (lowConfidenceDetected ? 'warn' : 'pass');
+
       checks.push({
         name: 'Malware/Phishing Indicators',
-        status: malwareDetected ? 'fail' : 'pass',
+        status: malwareCheckStatus,
         description: malwareDescription,
         severity: 'critical',
-        explanation: 'This check scans for known malware signatures, phishing patterns, deceptive download pages, and scam content using multiple detection methods including behavioral analysis and Google Safe Browsing API.',
+        explanation: 'This check scans for known malware signatures, phishing patterns, deceptive download pages, and scam content using multiple detection methods including behavioral analysis and Google Safe Browsing API. Lower-confidence heuristic matches are shown as a warning rather than a failure.',
         riskScore: deceptiveDownload.riskScore,
         signals: detectionSignals
       });
@@ -654,24 +685,54 @@ class SafetyCheck {
   detectPhishingIndicators(url, hostname) {
     try {
       const urlLower = url.toLowerCase();
-      
-      // Check for obfuscated payloads (base64-like strings)
-      if (/\/[A-Za-z0-9+/]{50,}={0,2}($|\?|\/)/i.test(urlLower)) return true;
-      
-      // Check for long hex strings in URL path (common in malware distribution)
-      if (/\/[a-f0-9]{24,}($|\?|\/)/i.test(urlLower)) return true;
-      
-      // Suspicious tracking/affiliate patterns
-      if (/[?&](click_id|cid|zoneid|landing_id|aff_id|campaign_id)/i.test(urlLower)) return true;
-      
-      // IP address in URL (suspicious)
-      if (/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(urlLower)) return true;
-      
-      // Typosquatting detection
-      const typos = [/goog+le/i, /faceb+ook/i, /amazo+n/i, /paypa+l/i, /micros+oft/i, /app+le/i];
-      const legit = ['google.com', 'facebook.com', 'amazon.com', 'paypal.com', 'microsoft.com', 'apple.com'];
-      for (const pattern of typos) {
-        if (pattern.test(hostname) && !legit.some(d => hostname.includes(d))) return true;
+
+      // These "obfuscated URL" heuristics are individually weak - legitimate sites
+      // routinely use long opaque tokens (signed URLs, JWTs, unsubscribe links) and
+      // 24-char hex IDs (MongoDB ObjectIds are everywhere on e-commerce/blog URLs).
+      // Require at least two of them together before treating it as a real signal,
+      // instead of letting any single match zero out the whole report.
+      let weakSignals = 0;
+
+      // Obfuscated payload (long base64-like path segment)
+      if (/\/[A-Za-z0-9+/]{80,}={0,2}($|\?|\/)/i.test(urlLower)) weakSignals++;
+
+      // Long hex string in URL path (raised from 24+ to 32+ to avoid matching
+      // common legitimate identifiers like MongoDB ObjectIds)
+      if (/\/[a-f0-9]{32,}($|\?|\/)/i.test(urlLower)) weakSignals++;
+
+      // Site hosted directly off a bare IP address rather than a domain name
+      if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) weakSignals++;
+
+      if (weakSignals >= 2) return true;
+
+      // Typosquatting detection - compare the registrable domain label against known
+      // brands using edit distance rather than a raw substring test. The previous
+      // substring approach flagged unrelated domains that merely contain a brand name
+      // (e.g. "grapple.com"/"pineapple.com" for "apple") and legitimate country-code
+      // variants of the real brand (e.g. "google.de", "amazon.co.uk").
+      const labels = hostname.split('.');
+      const secondLevelTlds = new Set(['co', 'com', 'org', 'net', 'gov', 'ac', 'edu']);
+      let sld = labels.length >= 2 ? labels[labels.length - 2] : hostname;
+      if (labels.length >= 3 && secondLevelTlds.has(sld)) {
+        sld = labels[labels.length - 3];
+      }
+
+      const brands = ['google', 'facebook', 'amazon', 'paypal', 'microsoft', 'apple'];
+      for (const brand of brands) {
+        if (sld === brand) continue; // exact brand match on any TLD - legitimate
+        const lengthDiff = Math.abs(sld.length - brand.length);
+        // Length must be within 1 character of the brand name. This is what keeps
+        // real (if coincidental) words that merely contain a brand as a substring -
+        // "grapple"/"pineapple" contain "apple" but are 2-4 chars longer - from being
+        // misclassified.
+        if (lengthDiff > 1) continue;
+        const distance = this.levenshteinDistance(sld, brand);
+        // Same length: allow up to 2 character substitutions (e.g. "g00gle",
+        // "amaz0n"). One character longer/shorter: only a single insertion/deletion
+        // (e.g. "gooogle") - a distance of 2 at that length starts overlapping with
+        // coincidental unrelated words.
+        const maxDistance = lengthDiff === 0 ? 2 : 1;
+        if (distance > 0 && distance <= maxDistance) return true;
       }
 
       return false;
@@ -679,6 +740,34 @@ class SafetyCheck {
       logger.error('Error in detectPhishingIndicators:', err.message);
       return false;
     }
+  }
+
+  /**
+   * Standard Levenshtein edit distance between two strings.
+   * Used to detect typosquatted domains (e.g. "gooogle" vs "google")
+   * without falsely matching unrelated words that merely contain a brand
+   * name as a substring.
+   */
+  levenshteinDistance(a, b) {
+    const m = a.length;
+    const n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (a[i - 1] === b[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+    return dp[m][n];
   }
 
   checkDomainReputation(hostname, url) {
@@ -698,32 +787,38 @@ class SafetyCheck {
         }
       }
       
-      // Known file-dropper / malware distribution domain patterns
+      // Known file-dropper / malware distribution domain patterns.
+      // NOTE: previously included `^(get|grab|fetch|dl|download|file|soft|free)[a-z]*\.`
+      // and `\d{2,}[a-z]*\.(com|net|org)$`, which matched huge numbers of legitimate
+      // domains by coincidence (freecodecamp.org, filezilla.org, getpocket.com,
+      // office365.com, 37signals.com, download.com, ...) and forced the whole report
+      // to a 0/100 "malware detected" score. Removed in favor of narrower, still
+      // high-signal patterns that require crack/keygen/patch-style keywords with an
+      // explicit separator, which are far less likely to appear by coincidence.
       const malwareDistributionPatterns = [
         { pattern: /getflux/i, reason: 'Domain associated with software bundling/PUP distribution' },
-        { pattern: /^(get|grab|fetch|dl|download|file|soft|free)[a-z]*\./i, reason: 'Generic file delivery domain pattern' },
-        { pattern: /install(er)?s?[.-]/i, reason: 'Generic installer delivery domain' },
-        { pattern: /(setup|patch|crack|keygen|serial)[.-]/i, reason: 'Potentially unwanted software distribution domain' },
-        { pattern: /\d{2,}[a-z]*\.(com|net|org)$/i, reason: 'Numeric domain pattern common in malware campaigns' }
+        { pattern: /(free)?(setup|patch|crack|keygen|serial|activator)[.-]/i, reason: 'Potentially unwanted software distribution domain' }
       ];
-      
+
       for (const { pattern, reason } of malwareDistributionPatterns) {
         if (pattern.test(hostLower)) {
           return { isSuspicious: true, reason };
         }
       }
-      
+
       // Check URL path for suspicious patterns
       try {
         const urlPath = new URL(url).pathname;
-        // Long random/hash paths are suspicious
+        // Long random/hash paths are suspicious. Restricted to hex-only paths of at
+        // least 32 chars to avoid matching common legitimate identifiers like 24-char
+        // MongoDB ObjectIds used throughout e-commerce/blog URLs.
         if (/\/[a-f0-9]{32,}$/i.test(urlPath)) {
           return { isSuspicious: true, reason: 'Hash-like URL path typical of malware distribution tracking' };
         }
       } catch (e) {
         // Ignore URL parsing errors
       }
-      
+
       return { isSuspicious: false };
     } catch (err) {
       logger.error('Error in checkDomainReputation:', err.message);

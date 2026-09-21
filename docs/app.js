@@ -232,7 +232,12 @@ class SiteSentinelApp {
     const safetyCat = (data.categories || []).find(cat => cat.category && cat.category.toLowerCase().includes('safety'));
     if (safetyCat && Array.isArray(safetyCat.checks)) {
       const credCheck = safetyCat.checks.find(c => c.name && c.name.toLowerCase().includes('credential harvesting'));
-      if (credCheck && credCheck.status !== 'fail' && credCheck.status !== 'pass' && credCheck.description) {
+      // The backend marks the "known retail domain" case as a NOTICE inside the
+      // description while keeping status 'pass' (so it doesn't drop the score).
+      // Checking for a status that isn't 'fail' or 'pass' can never be true here -
+      // that check always returns exactly one of those two - so match on the NOTICE
+      // prefix instead.
+      if (credCheck && credCheck.description && credCheck.description.startsWith('NOTICE:')) {
         showCredHarvest = true;
         credHarvestMsg = credCheck.description;
       }
