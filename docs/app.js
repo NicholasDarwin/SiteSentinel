@@ -110,6 +110,9 @@ class SiteSentinelApp {
     this.exportBtn = document.getElementById('exportBtn');
     this.exportJsonBtn = document.getElementById('exportJsonBtn');
     this.submitBtn = this.form.querySelector('button[type="submit"]');
+    this.formError = document.getElementById('formError');
+    this.loadingOverlay = document.getElementById('loadingOverlay');
+    this.lastFocus = null;
     // Evidence modal
     this.checkModal = document.getElementById('checkModal');
     this.modalBody = document.getElementById('modalBody');
@@ -130,6 +133,7 @@ class SiteSentinelApp {
 
   bindEvents() {
     this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+    this.urlInput.addEventListener('input', () => this.showFormError(''));
     this.newAnalysisBtn?.addEventListener('click', () => this.resetForm());
     this.exportBtn?.addEventListener('click', () => this.exportReport());
     this.exportJsonBtn?.addEventListener('click', () => this.exportJson());
@@ -141,7 +145,7 @@ class SiteSentinelApp {
       if (e.target === this.checkModal) this.closeCheckModal();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.checkModal?.style.display !== 'none') this.closeCheckModal();
+      if (e.key === 'Escape' && this.checkModal && !this.checkModal.hidden) this.closeCheckModal();
     });
     // "Show all N" reveals the rest of a capped evidence list (already present
     // in the DOM, just hidden - see renderCheckModalContent).
@@ -189,20 +193,33 @@ class SiteSentinelApp {
     const url = this.urlInput.value.trim();
 
     if (!url) {
-      alert('Please enter a valid URL');
+      this.showFormError('Enter a website address, for example example.com.');
+      this.urlInput.focus();
       return;
     }
 
     this.analyzeUrl(url);
   }
 
+  /** Shows a message under the address field; an empty string clears it. */
+  showFormError(message) {
+    if (!this.formError) return;
+    this.formError.textContent = message;
+    this.formError.hidden = !message;
+    this.urlInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+  }
+
   async analyzeUrl(url) {
     // Show loading state
-    this.resultsSection.style.display = 'none';
+    this.resultsSection.hidden = true;
+    this.showFormError('');
     this.submitBtn.disabled = true;
-    this.submitBtn.textContent = 'Analyzing...';
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+    this.submitBtn.textContent = 'Inspecting…';
+    const host = window.SiteSeal ? window.SiteSeal.hostnameOf(url) : url;
+    const loadingText = document.getElementById('loadingText');
+    if (loadingText) loadingText.textContent = `Inspecting ${host}`;
+    window.SiteSeal?.drawSeal(document.getElementById('loadingSeal'), host);
+    this.loadingOverlay?.classList.add('is-active');
 
     try {
       const response = await fetch('/api/analyze', {
@@ -244,12 +261,15 @@ class SiteSentinelApp {
         this.getAIAssessment(data);
       }
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      const offline = error instanceof TypeError;
+      this.showFormError(offline
+        ? 'Could not reach the SiteSentinel server. Check that it is running, then try again.'
+        : `Inspection failed: ${error.message}`);
       console.error('Analysis error:', error);
     } finally {
       this.submitBtn.disabled = false;
-      this.submitBtn.textContent = 'Analyze';
-      if (loadingOverlay) loadingOverlay.style.display = 'none';
+      this.submitBtn.textContent = 'Inspect site';
+      this.loadingOverlay?.classList.remove('is-active');
     }
   }
 
@@ -257,19 +277,19 @@ class SiteSentinelApp {
     // Comprehensive validation
     if (!data || typeof data !== 'object') {
       console.error('Invalid data type:', typeof data);
-      alert('Invalid analysis response received (invalid type)');
+      this.showFormError('The server sent an unreadable report. Try again.');
       return;
     }
     
     if (!data.overall) {
       console.error('Missing overall object:', data);
-      alert('Invalid analysis response received (missing overall)');
+      this.showFormError('The server sent a report without an overall score. Try again.');
       return;
     }
     
     if (typeof data.overall.score !== 'number' || data.overall.score === undefined || data.overall.score === null) {
       console.error('Invalid score:', data.overall.score, typeof data.overall.score);
-      alert('Invalid analysis response received (missing score)');
+      this.showFormError('The server sent a report without an overall score. Try again.');
       return;
     }
     
@@ -279,9 +299,9 @@ class SiteSentinelApp {
     if (this.scoreNote) {
       if (data.overall.unableToAnalyze && data.overall.note) {
         this.scoreNote.textContent = data.overall.note;
-        this.scoreNote.style.display = 'block';
+        this.scoreNote.hidden = false;
       } else {
-        this.scoreNote.style.display = 'none';
+        this.scoreNote.hidden = true;
       }
     }
 
@@ -306,19 +326,28 @@ class SiteSentinelApp {
     }
     if (showCredHarvest && credHarvestWarning && credHarvestWarningText) {
       credHarvestWarningText.textContent = credHarvestMsg;
-      credHarvestWarning.style.display = 'block';
+      credHarvestWarning.hidden = false;
     } else if (credHarvestWarning) {
-      credHarvestWarning.style.display = 'none';
+      credHarvestWarning.hidden = true;
     }
 
     // Apply color gradient to overall score circle - prefer the server's color
     // (it already accounts for the "unable to analyze" gray override; recomputing
     // client-side from the raw number alone would miss that).
-    const scoreColor = data.overall.color || this.getScoreColor(data.overall.score);
+    // A report the server couldn't score is drawn in neutral ink rather than
+    // a pass/fail colour.
+    const scoreColor = data.overall.unableToAnalyze ? 'var(--ink-soft)' : this.getScoreColor(data.overall.score);
     const scoreArc = document.getElementById('scoreArc');
     if (scoreArc) {
+      const circumference = 2 * Math.PI * 45;
+      const fraction = Math.max(0, Math.min(100, data.overall.score)) / 100;
       scoreArc.style.stroke = scoreColor;
+      scoreArc.style.strokeDashoffset = String(circumference);
+      requestAnimationFrame(() => {
+        scoreArc.style.strokeDashoffset = String(circumference * (1 - fraction));
+      });
     }
+    window.SiteSeal?.drawSeal(document.getElementById('resultSeal'), window.SiteSeal.hostnameOf(data.url || ''));
 
     // Update URL
     this.analyzedUrl.textContent = data.url || 'Unknown';
@@ -329,7 +358,7 @@ class SiteSentinelApp {
     const categories = data.categories || [];
     if (!Array.isArray(categories)) {
       console.error('Categories is not an array:', categories);
-      alert('Invalid categories format');
+      this.showFormError('The server sent a report in an unexpected format. Try again.');
       return;
     }
 
@@ -339,7 +368,7 @@ class SiteSentinelApp {
     });
 
     // Show results section
-    this.resultsSection.style.display = 'block';
+    this.resultsSection.hidden = false;
     this.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     // Reveal AI section if enabled
@@ -416,8 +445,7 @@ class SiteSentinelApp {
     // Toggle expand/collapse
     card.querySelector('.category-card-header').addEventListener('click', () => {
       card.classList.toggle('expanded');
-      card.querySelector('.category-body').style.display =
-        card.classList.contains('expanded') ? 'block' : 'none';
+      card.querySelector('.category-body').hidden = !card.classList.contains('expanded');
     });
 
     // Set expanded by default
@@ -533,11 +561,11 @@ class SiteSentinelApp {
     if (isImportant) {
       return `
         <li class="check-item check-item-important" data-cat-idx="${catIdx}" data-check-idx="${originalIdx}">
-          <div class="check-icon">${statusIcon}</div>
+          <div class="check-icon status-${escapeHtml(check.status)}">${statusIcon}</div>
           <div class="check-details">
             <div class="check-name-row">
               <span class="check-name">${name}</span>
-              <span class="importance-badge">Important</span>
+              <span class="importance-badge">Key</span>
               ${pointsBadge}
             </div>
             <div class="check-description">${description}</div>
@@ -549,7 +577,7 @@ class SiteSentinelApp {
 
     return `
       <li class="check-item check-item-clickable" data-cat-idx="${catIdx}" data-check-idx="${originalIdx}">
-        <div class="check-icon">${statusIcon}</div>
+        <div class="check-icon status-${escapeHtml(check.status)}">${statusIcon}</div>
         <div class="check-details">
           <div class="check-name-row">
             <span class="check-name">${name}</span>
@@ -570,11 +598,17 @@ class SiteSentinelApp {
     const check = category?.checks?.[checkIdx];
     if (!this.checkModal || !this.modalBody || !category || !check) return;
     this.modalBody.innerHTML = this.renderCheckModalContent(check, category);
-    this.checkModal.style.display = 'flex';
+    this.lastFocus = document.activeElement;
+    this.checkModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    this.checkModal.querySelector('.modal-close')?.focus();
   }
 
   closeCheckModal() {
-    if (this.checkModal) this.checkModal.style.display = 'none';
+    if (!this.checkModal) return;
+    this.checkModal.hidden = true;
+    document.body.style.overflow = '';
+    this.lastFocus?.focus?.();
   }
 
   renderCheckModalContent(check, category) {
@@ -747,29 +781,10 @@ class SiteSentinelApp {
   }
 
   getScoreColor(score) {
-    // Smooth gradient: green (75+) -> yellow (50-75) -> orange (25-50) -> red (0-25)
-    if (score >= 75) {
-      // Green: 75-100
-      const ratio = (score - 75) / 25; // 0 to 1
-      const r = Math.round(16 + ratio * 56); // #10 to #48
-      const g = Math.round(184 + ratio * 16); // #b8 to #d0
-      return `rgb(${r}, ${g}, 0)`;
-    } else if (score >= 50) {
-      // Green to Yellow: 50-75
-      const ratio = (score - 50) / 25; // 0 to 1
-      const r = Math.round(16 + ratio * 239); // #10 to #ff
-      const g = Math.round(200 - ratio * 50); // #c8 to #78
-      return `rgb(${r}, ${g}, 0)`;
-    } else if (score >= 25) {
-      // Yellow to Orange: 25-50
-      const ratio = (score - 25) / 25; // 0 to 1
-      const r = 255;
-      const g = Math.round(165 - ratio * 10); // #a5 to #9b
-      return `rgb(${r}, ${g}, 0)`;
-    } else {
-      // Orange to Red: 0-25
-      return `rgb(255, ${Math.round(155 * (score / 25))}, 0)`;
-    }
+    // Status tokens from styles.css, so scores match pass/warn/fail colours.
+    if (score >= 75) return 'var(--pass)';
+    if (score >= 50) return 'var(--warn)';
+    return 'var(--fail)';
   }
 
   getScoreLabel(score) {
@@ -783,20 +798,17 @@ class SiteSentinelApp {
   resetForm() {
     this.urlInput.value = '';
     this.urlInput.focus();
-    this.resultsSection.style.display = 'none';
+    this.resultsSection.hidden = true;
     this.categoriesGrid.innerHTML = '';
     this.toggleAIVisibility(false);
     // Hide AI assessment
     if (this.aiAssessmentCard) {
-      this.aiAssessmentCard.style.display = 'none';
+      this.aiAssessmentCard.hidden = true;
     }
   }
 
   exportReport() {
-    if (!this.analysisData) {
-      alert('No analysis data to export');
-      return;
-    }
+    if (!this.analysisData) return;
 
     const report = this.generateReport();
     const blob = new Blob([report], { type: 'text/plain' });
@@ -811,10 +823,7 @@ class SiteSentinelApp {
   }
 
   exportJson() {
-    if (!this.analysisData) {
-      alert('No analysis data to export');
-      return;
-    }
+    if (!this.analysisData) return;
 
     const blob = new Blob([JSON.stringify(this.analysisData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -917,7 +926,7 @@ Overall Score: ${data.overall.score}/100 (${data.overall.label})
   toggleAIVisibility(forceShow) {
     if (!this.aiSection) return;
     const show = !!this.aiCapable && !!forceShow;
-    this.aiSection.style.display = show ? '' : 'none';
+    this.aiSection.hidden = !show;
   }
 
   async askAI() {
@@ -948,9 +957,9 @@ Overall Score: ${data.overall.score}/100 (${data.overall.label})
     if (!this.aiAssessmentCard || !this.aiCapable) return;
     
     // Show card with loading state
-    this.aiAssessmentCard.style.display = 'block';
+    this.aiAssessmentCard.hidden = false;
     if (this.aiScore) this.aiScore.textContent = '--';
-    if (this.aiMessage) this.aiMessage.textContent = 'Analyzing security posture...';
+    if (this.aiMessage) this.aiMessage.textContent = 'Reading the report…';
     
     try {
       const r = await fetch('/api/ai/quick-assessment', {

@@ -4,31 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Safety & Threats Agent — SiteSentinel</title>
-  <link rel="icon" type="image/svg+xml" href="../assets/icons/logo.svg">
+  <link rel="icon" type="image/svg+xml" href="../assets/mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body class="page-agent-detail">
-  <div class="nav-wrapper">
-    <nav class="navbar">
-      <a href="../index.html" class="navbar-brand">
-        <img src="../assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
-        <h1>SiteSentinel</h1>
-      </a>
-      <div class="navbar-links">
-        <ul class="nav-menu">
-          <li><a href="../index.html" class="nav-link">Home</a></li>
-          <li><a href="../safety.html" class="nav-link">Safety</a></li>
-          <li><a href="../agents.html" class="nav-link active">Agents</a></li>
-          <li><a href="../about.html" class="nav-link">About</a></li>
-        </ul>
-      </div>
-    </nav>
-  </div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <main class="page container">
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="../index.html" class="wordmark"><img src="../assets/mark.svg" alt="" width="28" height="28">SiteSentinel</a>
+      <ul class="site-nav-links">
+        <li><a href="../safety.html">Safety checks</a></li>
+        <li><a href="../agents.html" aria-current="page">Agents</a></li>
+        <li><a href="../about.html">About</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="page">
     <a href="../agents.html" class="back-link">← Back to Agents</a>
     
     <header class="agent-detail-header">
@@ -222,7 +219,7 @@
 
       <div class="score-impact critical">
         <h4><svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Special Malware Override</h4>
-        <p>If malware or phishing is detected, the score is <strong>forced to 0</strong> regardless of other checks:</p>
+        <p>Only a <strong>confirmed</strong>, high-confidence malware or phishing match sets the score to <strong>0</strong>. Heuristic signals deduct points like any other finding:</p>
         <pre><code>if (malwareFlag) {
   score = 0;
 }</code></pre>
@@ -249,9 +246,16 @@
     </section>
   </main>
 
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+  <footer class="site-footer">
+    <p class="footer-wordmark" aria-hidden="true">SiteSentinel</p>
+    <div class="footer-row">
+      <p>Open source under the MIT licence. Built by Nicholas Darwin.</p>
+      <ul>
+        <li><a href="../index.html">Inspect a site</a></li>
+        <li><a href="../safety.html">Safety checks</a></li>
+        <li><a href="../agents.html">Agents</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
     </div>
   </footer>
 </body>

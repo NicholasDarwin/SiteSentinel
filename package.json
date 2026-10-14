@@ -1,7 +1,7 @@
 {
   "name": "sitesentinel",
   "version": "2.0.0",
-  "description": "Professional Website Security & Performance Analysis Platform with 60+ comprehensive checks",
+  "description": "Inspect any public website across nine categories and see the evidence behind every verdict",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

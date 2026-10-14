@@ -3,35 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SiteSentinel — Safety & Threats</title>
-  <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <title>Safety & Threats — SiteSentinel</title>
+  <link rel="icon" type="image/svg+xml" href="assets/mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="page-safety">
-  <!-- Navigation -->
-  <div class="nav-wrapper">
-    <nav class="navbar">
-      <a href="index.html" class="navbar-brand">
-        <img src="assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
-        <h1>SiteSentinel</h1>
-      </a>
-      <div class="navbar-links">
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="safety.html" class="nav-link active">Safety</a></li>
-          <li><a href="agents.html" class="nav-link">Agents</a></li>
-          <li><a href="about.html" class="nav-link">About</a></li>
-        </ul>
-      </div>
-    </nav>
-  </div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <main class="page container">
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" class="wordmark"><img src="assets/mark.svg" alt="" width="28" height="28">SiteSentinel</a>
+      <ul class="site-nav-links">
+        <li><a href="safety.html" aria-current="page">Safety checks</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="page">
     <header class="pro-hero">
-      <h1><svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Safety & Threats</h1>
+      <h1>Safety & Threats</h1>
       <p class="lead">Comprehensive malware detection, phishing analysis, and threat assessment. Click any check below to learn exactly how it works.</p>
     </header>
 
@@ -152,11 +148,11 @@
       <div class="info-grid">
         <div class="info-card">
           <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8m-4-4h8"/></svg> Score Calculation</h4>
-          <p>Each check contributes to the overall Safety & Threats score using <code>calculateCategoryScore()</code>. Checks with <code>pass</code> status add positive points, while <code>fail</code> and <code>error</code> statuses reduce the score based on severity.</p>
+          <p>The category starts at 100 and <code>calculateCategoryScore()</code> deducts points for each finding: a <code>fail</code> costs the check's full severity weight, a <code>warn</code> costs half, and <code>pass</code>, <code>info</code> and <code>error</code> cost nothing. Ordinary findings can't take a category below 15.</p>
         </div>
         <div class="info-card">
           <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Malware Override</h4>
-          <p>If malware or phishing is detected, the entire category score is forced to <strong>0</strong> regardless of other check results. This ensures dangerous sites are always flagged appropriately.</p>
+          <p>A <strong>confirmed</strong>, high-confidence malware or phishing match sets the whole category to <strong>0</strong>, overriding the floor. Heuristic signals on their own only deduct points.</p>
         </div>
         <div class="info-card">
           <h4><svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> Status Meanings</h4>
@@ -172,9 +168,16 @@
     </section>
   </main>
 
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; 2026 SiteSentinel. All rights reserved.</p>
+  <footer class="site-footer">
+    <p class="footer-wordmark" aria-hidden="true">SiteSentinel</p>
+    <div class="footer-row">
+      <p>Open source under the MIT licence. Built by Nicholas Darwin.</p>
+      <ul>
+        <li><a href="index.html">Inspect a site</a></li>
+        <li><a href="safety.html">Safety checks</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
     </div>
   </footer>
 </body>

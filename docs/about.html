@@ -1,87 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SiteSentinel — About</title>
-  <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — SiteSentinel</title>
+  <meta name="description" content="What SiteSentinel is, how it is built, and what it will and won't do to a website it inspects.">
+  <link rel="icon" type="image/svg+xml" href="assets/mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="page-about">
-  <div class="nav-wrapper">
-    <nav class="navbar">
-      <a href="index.html" class="navbar-brand">
-        <h1>SiteSentinel</h1>
-      </a>
-      <div class="navbar-links">
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="safety.html" class="nav-link">Safety</a></li>
-          <li><a href="agents.html" class="nav-link">Agents</a></li>
-          <li><a href="about.html" class="nav-link active">About</a></li>
-        </ul>
-      </div>
-    </nav>
-  </div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <main>
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" class="wordmark"><img src="assets/mark.svg" alt="" width="28" height="28">SiteSentinel</a>
+      <ul class="site-nav-links">
+        <li><a href="safety.html">Safety checks</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="about.html" aria-current="page">About</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="page">
     <header class="pro-hero">
-      <h1>Enterprise-Grade Website Security Analysis</h1>
-      <p class="lead">SiteSentinel is a comprehensive security auditing platform designed to help development teams, security professionals, and organizations identify vulnerabilities, optimize performance, and maintain compliance — all through a single, intuitive interface.</p>
+      <h1>A second opinion on any website.</h1>
+      <p class="about-lede">SiteSentinel looks at a site the way a careful security reviewer would, then writes down what it saw so you can check its work.</p>
     </header>
 
-    <section class="about-highlights">
-      <div class="highlight-grid">
-        <article class="highlight-card">
-          <div class="highlight-number">60+</div>
-          <h3>Security Checks</h3>
-          <p>Industry-standard analysis covering SSL/TLS configuration, security headers, DNS hygiene, performance metrics, SEO optimization, WCAG accessibility, and threat detection</p>
-        </article>
+    <dl class="about-facts reveal">
+      <div><dt>60+</dt><dd>checks across nine categories, from TLS and headers to typosquats and WHOIS age.</dd></div>
+      <div><dt>9</dt><dd>inspectors that run in parallel, each returning its own score and evidence.</dd></div>
+      <div><dt>MIT</dt><dd>licensed. Every rule and score weight is in the source, nothing is hidden.</dd></div>
+    </dl>
 
-        <article class="highlight-card">
-          <div class="highlight-number">&lt;5s</div>
-          <h3>Average Scan Time</h3>
-          <p>High-performance parallel execution engine delivers comprehensive security assessments in seconds, not minutes</p>
-        </article>
-
-        <article class="highlight-card">
-          <div class="highlight-number">100%</div>
-          <h3>Open Source</h3>
-          <p>Fully transparent and auditable codebase with an extensible plugin architecture for custom security policies</p>
-        </article>
+    <section class="about-split reveal" aria-labelledby="whyTitle">
+      <h2 id="whyTitle">Why it exists</h2>
+      <div>
+        <p>Most website scanners hand back a grade and a list of red labels. That is fine until a result looks wrong, and then there is nothing to check it against.</p>
+        <p>SiteSentinel keeps the receipts. Each finding carries the evidence it was based on, the points it cost and a plain explanation of the fix. When a result could be a false positive, the report says so instead of guessing.</p>
       </div>
     </section>
 
-    <section class="about-details">
-      <div class="detail-block">
-        <h2>Our Mission</h2>
-        <p>We believe security auditing should be accessible, actionable, and transparent. SiteSentinel provides deterministic, reproducible checks with clear remediation guidance — empowering teams to identify risks, prioritize fixes, and track improvements over time.</p>
-      </div>
-
-      <div class="detail-block">
-        <h2>Architecture & Technology</h2>
-        <p><strong>Backend:</strong> Node.js with Express, featuring a modular check-based architecture for extensibility and maintainability<br>
-        <strong>Frontend:</strong> Lightweight, responsive dashboard built with vanilla JavaScript for maximum performance and zero dependencies<br>
-        <strong>Analysis Engine:</strong> Concurrent execution pipeline with intelligent scoring algorithms and exportable JSON/PDF reports</p>
-      </div>
-
-      <div class="detail-block">
-        <h2>Use Cases</h2>
-        <p><strong>Security Teams:</strong> Continuous vulnerability assessment and compliance monitoring<br>
-        <strong>Developers:</strong> Pre-deployment security checks integrated into CI/CD workflows<br>
-        <strong>Agencies:</strong> Client website audits with professional, shareable reports</p>
+    <section class="about-split reveal" aria-labelledby="safeTitle">
+      <h2 id="safeTitle">What it won't do</h2>
+      <div>
+        <p>It only makes the requests a normal visitor's browser would: it fetches public pages, reads response headers, looks up DNS and WHOIS records and asks Google Safe Browsing when a key is configured.</p>
+        <p>It does not scan ports, try passwords, submit forms or send attack payloads. Addresses on private networks are refused before any request is made.</p>
       </div>
     </section>
 
-    <section class="cta-section">
-      <h2>Open Source & Community Driven</h2>
-      <p>SiteSentinel is maintained by a community of security professionals and developers. Contributions, feature requests, and feedback are always welcome.</p>
-      <a href="https://github.com/NicholasDarwin/SiteSentinel" target="_blank" class="cta-button">View on GitHub</a>
+    <section class="about-split reveal" aria-labelledby="stackTitle">
+      <h2 id="stackTitle">How it's built</h2>
+      <ul class="stack-list">
+        <li><strong>Server</strong>Node.js and Express. Each category is its own check module under <code>src/checks</code>.</li>
+        <li><strong>Page analysis</strong>Axios for requests, Cheerio for HTML, Puppeteer for pages that need a real browser.</li>
+        <li><strong>Scoring</strong>One file, <code>score-calculator.util.js</code>, holds every weight. Tests cover it with Jest.</li>
+        <li><strong>Interface</strong>Plain HTML, CSS and JavaScript with no build step. The seal is drawn from the address you type.</li>
+      </ul>
+    </section>
+
+    <section class="about-split reveal" aria-labelledby="sourceTitle">
+      <h2 id="sourceTitle">Read the source</h2>
+      <div>
+        <p>SiteSentinel is a personal project by Nicholas Darwin. Issues and pull requests are welcome.</p>
+        <p><a class="btn btn-primary" href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">View on GitHub</a></p>
+      </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <p class="footer-wordmark" aria-hidden="true">SiteSentinel</p>
+    <div class="footer-row">
+      <p>Open source under the MIT licence. Built by Nicholas Darwin.</p>
+      <ul>
+        <li><a href="index.html">Inspect a site</a></li>
+        <li><a href="safety.html">Safety checks</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="js/site.js"></script>
 </body>
 </html>

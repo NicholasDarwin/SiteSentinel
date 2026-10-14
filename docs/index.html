@@ -3,289 +3,266 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SiteSentinel - Comprehensive website security analysis tool with 60+ checks for SSL/TLS, DNS, performance, SEO, accessibility, and safety.">
-  <meta name="keywords" content="website security, URL analysis, SSL check, DNS security, SEO audit, accessibility check, performance analysis">
-  <meta name="author" content="SiteSentinel">
-  <title>SiteSentinel - Website Security Analysis Platform</title>
-  <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <title>SiteSentinel — Check a website before you trust it</title>
+  <meta name="description" content="SiteSentinel inspects any public website across nine categories, from HTTPS and security headers to phishing signals and DNS, and shows the evidence behind every verdict.">
+  <meta property="og:title" content="SiteSentinel">
+  <meta property="og:description" content="Inspect any public website and see the evidence behind every verdict.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#E8EDE9">
+  <link rel="icon" type="image/svg+xml" href="assets/mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-  <!-- Keep Nunito for the logo if needed, though we might just use system fonts as per CSS -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <!-- Navigation -->
-  <div class="nav-wrapper">
-    <nav class="navbar">
-      <a href="index.html" class="navbar-brand">
-        <img src="assets/icons/logo.svg" alt="SiteSentinel" class="brand-logo" />
-        <h1>SiteSentinel</h1>
-      </a>
-      <div class="navbar-links">
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link active">Home</a></li>
-          <li><a href="safety.html" class="nav-link">Safety</a></li>
-          <li><a href="agents.html" class="nav-link">Agents</a></li>
-          <li><a href="about.html" class="nav-link">About</a></li>
-        </ul>
-      </div>
+<body class="page-home">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" class="wordmark"><img src="assets/mark.svg" alt="" width="28" height="28">SiteSentinel</a>
+      <ul class="site-nav-links">
+        <li><a href="safety.html">Safety checks</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
     </nav>
-  </div>
+  </header>
 
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="loading-overlay">
+  <!-- Shown while /api/analyze runs -->
+  <div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite">
     <div class="loading-overlay-content">
-      <div class="loading-overlay-spinner"></div>
-      <div class="loading-overlay-text">Analyzing...</div>
+      <svg class="seal seal-spin" id="loadingSeal" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+      <p class="loading-overlay-text" id="loadingText">Inspecting…</p>
+      <p class="loading-overlay-hint">Most sites take 10 to 30 seconds.</p>
     </div>
   </div>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <h2>Comprehensive Website<br>Security Analysis</h2>
-        <p>Analyze any website for security vulnerabilities, performance issues,<br>and compliance gaps with 60+ automated checks.</p>
-        
-        <!-- Search/Input Section -->
-        <div class="search-container">
-          <form id="analysisForm" class="search-form">
-            <div class="input-wrapper">
-              <input 
-                type="text" 
-                id="urlInput" 
-                placeholder="example.com" 
-                required
-                class="url-input"
-              >
-              <button type="submit" class="btn btn-primary">
-                Analyze Now
-              </button>
-            </div>
-            <!-- <p class="input-hint">Enter any website URL to get a complete security audit</p> -->
-          </form>
-        </div>
-      </div>
-    </div>
-  </section>
+  <main id="main">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <h1 id="heroTitle">Check a site before you trust&nbsp;it.</h1>
+        <p class="hero-lede">SiteSentinel inspects any public website across nine categories, from HTTPS and security headers to phishing signals and DNS, and shows the evidence behind every verdict.</p>
 
-  <!-- Results Section -->
-  <section id="resultsSection" class="results-section" style="display: none;">
-    <div class="container">
+        <form id="analysisForm" class="search-form" novalidate>
+          <label for="urlInput" class="field-label">Website address</label>
+          <div class="input-wrapper">
+            <input type="text" id="urlInput" class="url-input" placeholder="example.com"
+                   autocomplete="url" inputmode="url" spellcheck="false" autocapitalize="off"
+                   aria-describedby="formError">
+            <button type="submit" class="btn btn-primary">Inspect site</button>
+          </div>
+          <p id="formError" class="form-error" role="alert" hidden></p>
+          <p class="try-row">Try
+            <button type="button" class="try-link" data-url="github.com">github.com</button>
+            <button type="button" class="try-link" data-url="paypa1.com">paypa1.com</button>
+            <button type="button" class="try-link" data-url="https://testsafebrowsing.appspot.com/s/phishing.html">a phishing test page</button>
+          </p>
+        </form>
+      </div>
+
+      <figure class="hero-seal">
+        <svg class="seal" id="heroSeal" viewBox="-100 -100 200 200" role="img" aria-labelledby="sealCaption"></svg>
+        <figcaption id="sealCaption">The seal for <strong id="sealHost">sitesentinel</strong>. Every address draws its own, so a single swapped letter prints a different seal.</figcaption>
+      </figure>
+    </section>
+
+    <!-- Results (filled in by app.js) -->
+    <section id="resultsSection" class="results-section" hidden aria-labelledby="resultsTitle">
       <div class="results-header">
-        <h3>Analysis Results</h3>
+        <h2 id="resultsTitle">Report</h2>
         <p id="analyzedUrl" class="analyzed-url"></p>
       </div>
 
-      <!-- Overall Score Card -->
       <div class="overall-score-card">
         <div class="score-circle">
-          <svg viewBox="0 0 100 100">
+          <svg class="seal seal-behind" id="resultSeal" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+          <svg class="score-ring" viewBox="0 0 100 100" aria-hidden="true">
             <circle class="score-bg" cx="50" cy="50" r="45" />
             <circle class="score-progress" cx="50" cy="50" r="45" id="scoreArc" />
           </svg>
           <div class="score-content">
             <span class="score-number" id="overallScore">0</span>
             <span class="score-label" id="scoreLabel">Loading</span>
-            <div id="scoreNote" class="score-note" style="display:none;"></div>
-            <div id="credHarvestWarning" class="cred-harvest-warning">
-              <div class="cred-harvest-warning-box">
-                <svg class="cred-harvest-warning-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-                <span id="credHarvestWarningText"></span>
-              </div>
-            </div>
           </div>
         </div>
         <div class="score-details">
-          <h3>Overall Security Score</h3>
-          <p>Your website's comprehensive security and quality rating across 6 major categories.</p>
-          
-          <!-- AI Assessment (inline) -->
-          <div id="aiAssessmentCard" class="ai-assessment-inline" style="display:none;">
+          <h3>Overall score</h3>
+          <p>A weighted average of every category below. Security and Safety count three times as much as SEO or WHOIS.</p>
+          <p id="scoreNote" class="score-note" hidden></p>
+          <div id="credHarvestWarning" class="cred-harvest-warning" hidden>
+            <p class="cred-harvest-warning-box"><strong>Login form on a well-known domain.</strong> <span id="credHarvestWarningText"></span></p>
+          </div>
+
+          <div id="aiAssessmentCard" class="ai-assessment-inline" hidden>
             <div class="ai-inline-header">
-              <span class="ai-inline-badge">AI Assessment</span>
+              <span class="ai-inline-badge">AI assessment</span>
               <span class="ai-inline-score" id="aiScore">--</span>
             </div>
-            <div class="ai-inline-message" id="aiMessage">Analyzing security posture...</div>
+            <p class="ai-inline-message" id="aiMessage">Reading the report…</p>
           </div>
         </div>
       </div>
 
-      <!-- Categories Grid -->
       <div class="categories-grid" id="categoriesGrid"></div>
 
-      <!-- AI Security Insights -->
-      <section id="aiSection" class="card" style="display:none; margin-top:16px;">
-        <h2>AI Security Insights</h2>
-        <p>Ask questions about vulnerabilities and safety risks identified in your analysis.</p>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <input id="aiQuestion" type="text" placeholder="What are the top risks and fixes?" style="flex:1;" />
-          <button id="aiAskBtn" class="btn btn-primary">Ask AI</button>
+      <section id="aiSection" class="ai-panel" hidden aria-labelledby="aiTitle">
+        <h3 id="aiTitle">Ask about this report</h3>
+        <p>Questions are answered from the findings above.</p>
+        <div class="ai-ask-row">
+          <label for="aiQuestion" class="visually-hidden">Your question</label>
+          <input id="aiQuestion" type="text" placeholder="What should I fix first?">
+          <button id="aiAskBtn" class="btn btn-primary" type="button">Ask</button>
         </div>
-        <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap: wrap;">
-          <button class="btn btn-outline aiQ" data-q="List critical security misconfigurations and exact fixes">Top Risks</button>
-          <button class="btn btn-outline aiQ" data-q="Which security headers are missing and how to add them?">Headers</button>
-          <button class="btn btn-outline aiQ" data-q="Any malware, phishing, or suspicious redirects?">Safety</button>
-          <button class="btn btn-outline aiQ" data-q="Prioritized checklist to improve score quickly">Checklist</button>
+        <div class="ai-prompts">
+          <button class="btn btn-outline aiQ" type="button" data-q="List critical security misconfigurations and exact fixes">Top risks</button>
+          <button class="btn btn-outline aiQ" type="button" data-q="Which security headers are missing and how to add them?">Missing headers</button>
+          <button class="btn btn-outline aiQ" type="button" data-q="Any malware, phishing, or suspicious redirects?">Phishing and redirects</button>
+          <button class="btn btn-outline aiQ" type="button" data-q="Prioritized checklist to improve score quickly">Fix list</button>
         </div>
-        <pre id="aiAnswer" style="white-space:pre-wrap; background:#0b1220; color:#dbeafe; padding:12px; border-radius:8px; min-height:64px;"></pre>
+        <pre id="aiAnswer" class="ai-answer" aria-live="polite"></pre>
       </section>
 
-      <!-- Action Buttons -->
       <div class="results-actions">
-        <button id="newAnalysisBtn" class="btn btn-secondary">Analyze Another URL</button>
-        <button id="exportBtn" class="btn btn-outline">Export Report</button>
-        <button id="exportJsonBtn" class="btn btn-outline">Export JSON</button>
+        <button id="newAnalysisBtn" class="btn btn-secondary" type="button">Inspect another site</button>
+        <button id="exportBtn" class="btn btn-outline" type="button">Download report (.txt)</button>
+        <button id="exportJsonBtn" class="btn btn-outline" type="button">Download data (.json)</button>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Stats Section -->
-  <section class="stats-section">
-    <div class="container">
-      <div class="stats-row">
-        <div class="stat-item">
-          <span class="stat-number">60+</span>
-          <span class="stat-label">Security Checks</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">6</span>
-          <span class="stat-label">Analysis Categories</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">&lt;30s</span>
-          <span class="stat-label">Average Scan Time</span>
-        </div>
+    <section class="evidence" aria-labelledby="evidenceTitle">
+      <div class="evidence-copy reveal">
+        <h2 id="evidenceTitle">Every verdict shows its evidence.</h2>
+        <p>A score on its own asks you to take it on faith. Open any check in a report and you get what SiteSentinel actually saw: the response headers it received, the line of HTML that triggered a warning, the script and where it loads from.</p>
+        <p>Each finding also says how many points it cost, why it matters and how to fix it, with a note when the result could be a false positive.</p>
       </div>
-    </div>
-  </section>
 
-  <!-- Categories Section -->
-  <section id="features" class="categories-section">
-    <div class="container">
-      <div class="section-header">
-        <h2>What We Analyze</h2>
-        <p>Comprehensive coverage across six critical dimensions of website health</p>
-      </div>
-      <div class="category-list">
-        <div class="category-row">
-          <div class="category-icon-box">SEC</div>
-          <div class="category-info">
-            <h3>Security & HTTPS</h3>
-            <p>SSL/TLS certificates, HSTS, CSP policies, X-Frame-Options, and security headers</p>
-          </div>
-          <a href="agents/security-agent.html" class="category-link">Learn more →</a>
+      <div class="specimen reveal" data-ui aria-label="Example evidence panel">
+        <div class="specimen-head">
+          <span class="specimen-status">Warn</span>
+          <h3>Content Security Policy (CSP)</h3>
+          <p class="specimen-impact">−5 of 10 points · Security &amp; HTTPS 95 → 90</p>
         </div>
-        <div class="category-row">
-          <div class="category-icon-box">DNS</div>
-          <div class="category-info">
-            <h3>DNS & Domain</h3>
-            <p>DNS resolution, MX records, SPF, DKIM, DMARC, and email authentication</p>
-          </div>
-          <a href="agents/dns-agent.html" class="category-link">Learn more →</a>
-        </div>
-        <div class="category-row">
-          <div class="category-icon-box">PRF</div>
-          <div class="category-info">
-            <h3>Performance</h3>
-            <p>Response times, compression, caching headers, and resource optimization</p>
-          </div>
-          <a href="agents/performance-agent.html" class="category-link">Learn more →</a>
-        </div>
-        <div class="category-row">
-          <div class="category-icon-box">SEO</div>
-          <div class="category-info">
-            <h3>SEO & Metadata</h3>
-            <p>Meta tags, Open Graph, structured data, canonicals, and heading hierarchy</p>
-          </div>
-          <a href="agents/seo-agent.html" class="category-link">Learn more →</a>
-        </div>
-        <div class="category-row">
-          <div class="category-icon-box">A11Y</div>
-          <div class="category-info">
-            <h3>Accessibility</h3>
-            <p>WCAG 2.1 compliance, alt text, ARIA labels, color contrast, and form accessibility</p>
-          </div>
-          <a href="agents/accessibility-agent.html" class="category-link">Learn more →</a>
-        </div>
-        <div class="category-row">
-          <div class="category-icon-box">SFT</div>
-          <div class="category-info">
-            <h3>Safety & Threats</h3>
-            <p>Malware detection, phishing indicators, XSS protection, and SQL injection prevention</p>
-          </div>
-          <a href="agents/safety-agent.html" class="category-link">Learn more →</a>
+        <div class="specimen-body">
+          <p class="specimen-label">Response headers from https://shop.example.net/</p>
+          <table class="specimen-headers">
+            <tbody>
+              <tr><td>strict-transport-security</td><td>max-age=31536000</td></tr>
+              <tr><td>x-frame-options</td><td>SAMEORIGIN</td></tr>
+              <tr class="is-missing"><td>content-security-policy</td><td>missing</td></tr>
+              <tr><td>x-content-type-options</td><td>nosniff</td></tr>
+            </tbody>
+          </table>
+          <p class="specimen-label">How to fix, in nginx</p>
+          <pre><code>add_header Content-Security-Policy "default-src 'self';" always;</code></pre>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- How It Works Section -->
-  <section id="how-it-works" class="process-section">
-    <div class="container">
-      <div class="section-header">
-        <h2>How It Works</h2>
-        <p>Get actionable insights in three simple steps</p>
+    <section id="features" class="inspectors" aria-labelledby="inspectorsTitle">
+      <div class="section-intro reveal">
+        <h2 id="inspectorsTitle">Nine inspectors, one report.</h2>
+        <p>Each category runs in parallel and returns its own score. The multiplier is how much that category counts toward the overall score.</p>
       </div>
-      <div class="process-steps">
-        <div class="process-step">
-          <div class="process-number">01</div>
-          <h3>Enter URL</h3>
-          <p>Paste any website URL into the search bar above</p>
-        </div>
-        <div class="process-step">
-          <div class="process-number">02</div>
-          <h3>Run Analysis</h3>
-          <p>Our engine performs 60+ checks across all categories</p>
-        </div>
-        <div class="process-step">
-          <div class="process-number">03</div>
-          <h3>Review & Export</h3>
-          <p>Get detailed scores, recommendations, and exportable reports</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- CTA Section -->
-  <section class="cta-section">
-    <div class="container">
-      <h2>Ready to analyze your website?</h2>
-      <p>Join thousands of developers who trust SiteSentinel for security insights</p>
-      <a href="#" class="btn btn-primary" onclick="document.getElementById('urlInput').focus(); return false;">Start Analysis</a>
-    </div>
-  </section>
+      <ul class="inspector-list">
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 3">×3</span>
+          <h3><a href="agents/security-agent.html">Security &amp; HTTPS</a></h3>
+          <p>HTTPS, TLS version, HSTS, Content Security Policy, frame and content-type headers, scam redirects.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 3">×3</span>
+          <h3><a href="agents/safety-agent.html">Safety &amp; Threats</a></h3>
+          <p>Safe Browsing lookups, phishing and typosquat patterns, credential harvesting forms, obfuscated scripts, deceptive downloads.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 2">×2</span>
+          <h3><a href="agents/dns-agent.html">DNS &amp; Domain</a></h3>
+          <p>Resolution, redundancy, IPv6, CAA, and the SPF, DMARC and MX records that stop email spoofing.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 2">×2</span>
+          <h3><a href="agents/external-links-agent.html">Link Analysis</a></h3>
+          <p>Where the page's links lead, and which of them bounce through redirects to somewhere else.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 1.5">×1.5</span>
+          <h3><a href="agents/external-links-agent.html">External Links</a></h3>
+          <p>Every outbound link and URL hidden in scripts, scored safe, warning, unsafe or broken.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 1.5">×1.5</span>
+          <h3><a href="agents/performance-agent.html">Performance</a></h3>
+          <p>Load time, response size, compression, caching, HTTP version and redirect hops.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 1.5">×1.5</span>
+          <h3><a href="agents/accessibility-agent.html">Accessibility</a></h3>
+          <p>WCAG 2.1 basics: alt text, form labels, contrast, heading order, landmarks, keyboard access.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 1">×1</span>
+          <h3><a href="agents/seo-agent.html">SEO &amp; Metadata</a></h3>
+          <p>Title, description, canonical tag, Open Graph, structured data and mobile viewport.</p>
+        </li>
+        <li class="reveal">
+          <span class="inspector-weight" aria-label="Weight 1">×1</span>
+          <h3><a href="agents/whois-agent.html">WHOIS &amp; Domain Info</a></h3>
+          <p>Registrar, domain age, expiry date, status and name servers. A week-old domain is a warning sign.</p>
+        </li>
+      </ul>
+    </section>
 
-  <!-- Footer -->
-  <footer class="footer-minimal">
-    <div class="container">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <span>SiteSentinel</span>
-          <span class="footer-divider">·</span>
-          <span class="footer-tagline">Website Security Analysis</span>
-        </div>
-        <div class="footer-links">
-          <a href="agents.html">Agents</a>
-          <a href="about.html">About</a>
-          <a href="https://github.com/NicholasDarwin/SiteSentinel" target="_blank">GitHub</a>
-        </div>
+    <section class="scoring" aria-labelledby="scoringTitle">
+      <div class="section-intro reveal">
+        <h2 id="scoringTitle">How a score is counted.</h2>
+        <p>Every category starts at 100. A failed check costs its full weight, a warning costs half. Information-only checks cost nothing.</p>
       </div>
+
+      <dl class="severity-scale reveal">
+        <div class="severity-row" style="--pts: 35">
+          <dt>Critical</dt><dd><span class="severity-bar"></span><span class="severity-pts">35 points</span></dd>
+        </div>
+        <div class="severity-row" style="--pts: 20">
+          <dt>High</dt><dd><span class="severity-bar"></span><span class="severity-pts">20 points</span></dd>
+        </div>
+        <div class="severity-row" style="--pts: 10">
+          <dt>Medium</dt><dd><span class="severity-bar"></span><span class="severity-pts">10 points</span></dd>
+        </div>
+        <div class="severity-row" style="--pts: 5">
+          <dt>Low</dt><dd><span class="severity-bar"></span><span class="severity-pts">5 points</span></dd>
+        </div>
+      </dl>
+
+      <p class="scoring-note reveal">A category never drops below 15 from ordinary findings, so one missing header can't read as total failure. The exception is a confirmed malware or phishing match, which sets Safety &amp; Threats to 0.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-wordmark" aria-hidden="true">SiteSentinel</p>
+    <div class="footer-row">
+      <p>Open source under the MIT licence. Built by Nicholas Darwin.</p>
+      <ul>
+        <li><a href="safety.html">Safety checks</a></li>
+        <li><a href="agents.html">Agents</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">GitHub</a></li>
+      </ul>
     </div>
   </footer>
 
-  <!-- Modal for detailed check view -->
-  <div id="checkModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span class="modal-close">&times;</span>
+  <!-- Evidence panel for a single check -->
+  <div id="checkModal" class="modal" hidden>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-label="Check evidence">
+      <button type="button" class="modal-close" aria-label="Close">&times;</button>
       <div id="modalBody"></div>
     </div>
   </div>
 
+  <script src="js/seal.js"></script>
+  <script src="js/site.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
