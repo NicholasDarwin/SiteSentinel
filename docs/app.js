@@ -83,6 +83,15 @@ const VERDICT_LABELS = {
   'unable-to-determine': 'Unable to Determine'
 };
 
+/** A category the server couldn't analyze comes back with a null score. */
+function hasScore(score) {
+  return typeof score === 'number' && !Number.isNaN(score);
+}
+
+function formatScore(score) {
+  return hasScore(score) ? `${score}/100` : 'Not analyzed';
+}
+
 /** Escapes text for safe insertion into innerHTML. Evidence/description
  * content originates from arbitrary scanned websites, so anything from a
  * check object must be escaped before going into a template string. */
@@ -257,7 +266,9 @@ class SiteSentinelApp {
       this.displayResults(data);
       
       // Get AI quick assessment if enabled
-      if (this.aiCapable) {
+      // An unreachable site has almost no findings, which the AI reads as a
+      // clean bill of health - so don't ask it to rate one.
+      if (this.aiCapable && !data.overall.unableToAnalyze) {
         this.getAIAssessment(data);
       }
     } catch (error) {
@@ -294,7 +305,9 @@ class SiteSentinelApp {
     }
     
     // Update overall score
-    this.overallScore.textContent = data.overall.score;
+    // When most categories couldn't run, the server still sends the raw number
+    // for reference, but showing it would read as a real rating.
+    this.overallScore.textContent = data.overall.unableToAnalyze ? '–' : data.overall.score;
     this.scoreLabel.textContent = data.overall.label || 'Unknown';
     if (this.scoreNote) {
       if (data.overall.unableToAnalyze && data.overall.note) {
@@ -340,7 +353,7 @@ class SiteSentinelApp {
     const scoreArc = document.getElementById('scoreArc');
     if (scoreArc) {
       const circumference = 2 * Math.PI * 45;
-      const fraction = Math.max(0, Math.min(100, data.overall.score)) / 100;
+      const fraction = data.overall.unableToAnalyze ? 0 : Math.max(0, Math.min(100, data.overall.score)) / 100;
       scoreArc.style.stroke = scoreColor;
       scoreArc.style.strokeDashoffset = String(circumference);
       requestAnimationFrame(() => {
@@ -385,7 +398,7 @@ class SiteSentinelApp {
     const card = document.createElement('div');
     card.className = 'category-card';
 
-    const scoreColor = this.getScoreColor(category.score);
+    const scoreColor = hasScore(category.score) ? this.getScoreColor(category.score) : 'var(--paper-deep)';
     let checks = category.checks || [];
 
     // Sort checks: important (critical/high) first, then by status (fail > warn > info > pass)
@@ -413,8 +426,8 @@ class SiteSentinelApp {
           <h3>${categoryName}</h3>
           <div class="category-score">${importantChecks.length} key checks · ${otherChecks.length} additional</div>
         </div>
-        <div class="category-badge" style="background: ${scoreColor}">
-          ${category.score}/100
+        <div class="category-badge${hasScore(category.score) ? '' : ' is-unscored'}" style="background: ${scoreColor}">
+          ${formatScore(category.score)}
         </div>
       </div>
       <div class="category-body">
@@ -489,7 +502,9 @@ class SiteSentinelApp {
           <thead><tr><th>Check</th><th>Status</th><th>Points</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        <p class="score-breakdown-total">Total deducted: ${totalDeducted} pts from a 100-point baseline${totalMax ? ` (${totalMax} pts were at stake across ${checks.length} checks)` : ''} → ${category.score}/100</p>
+        <p class="score-breakdown-total">${hasScore(category.score)
+          ? `Total deducted: ${totalDeducted} pts from a 100-point baseline${totalMax ? ` (${totalMax} pts were at stake across ${checks.length} checks)` : ''} → ${category.score}/100`
+          : 'These checks couldn\'t run, so this category is left out of the overall score.'}</p>
         ${floorNote}
       </div>
     `;
@@ -620,8 +635,8 @@ class SiteSentinelApp {
     const otherChecks = (category.checks || []).filter(c => c !== check);
     const scoreWithout = computeCategoryScore(otherChecks);
     const scoreImpactLine = check.pointsDeducted > 0
-      ? `<strong>−${check.pointsDeducted} of ${check.maxPoints} possible points</strong> from ${escapeHtml(category.category)}${scoreWithout !== null ? ` (category: ${scoreWithout} → ${category.score})` : ` (category: ${category.score}/100)`}`
-      : `No points deducted from ${escapeHtml(category.category)} (category: ${category.score}/100)`;
+      ? `<strong>−${check.pointsDeducted} of ${check.maxPoints} possible points</strong> from ${escapeHtml(category.category)}${scoreWithout !== null ? ` (category: ${scoreWithout} → ${category.score})` : ` (category: ${formatScore(category.score)})`}`
+      : `No points deducted from ${escapeHtml(category.category)} (category: ${formatScore(category.score)})`;
 
     const evidenceHtml = evidence.length === 0
       ? '<p class="modal-empty-note">No structured evidence captured for this check.</p>'
@@ -871,14 +886,14 @@ class SiteSentinelApp {
 
 URL: ${data.url}
 Analyzed: ${data.timestamp}
-Overall Score: ${data.overall.score}/100 (${data.overall.label})
+Overall Score: ${data.overall.unableToAnalyze ? 'not rated' : `${data.overall.score}/100`} (${data.overall.label})${data.overall.note ? `\n${data.overall.note}` : ''}
 
 ════════════════════════════════════════════════════════════
 
 `;
 
     data.categories.forEach(category => {
-      report += `\n${category.category} - ${category.score}/100\n`;
+      report += `\n${category.category} - ${formatScore(category.score)}\n`;
       report += '─'.repeat(60) + '\n\n';
 
       category.checks.forEach(check => {
