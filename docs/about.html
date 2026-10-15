@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About — SiteSentinel</title>
-  <meta name="description" content="What SiteSentinel is, how it is built, and what it will and won't do to a website it inspects.">
+  <meta name="description" content="What SiteSentinel is, how it scores websites, how it is built, and what it will and won't do to a site it inspects.">
   <link rel="icon" type="image/svg+xml" href="assets/mark.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,45 +29,53 @@
   <main id="main" class="page">
     <header class="pro-hero">
       <h1>A second opinion on any website.</h1>
-      <p class="about-lede">SiteSentinel looks at a site the way a careful security reviewer would, then writes down what it saw so you can check its work.</p>
+      <p class="about-lede">SiteSentinel reviews a site the way a careful security analyst would, then records what it saw so you can check its work.</p>
     </header>
 
     <dl class="about-facts reveal">
-      <div><dt>60+</dt><dd>checks across nine categories, from TLS and headers to typosquats and WHOIS age.</dd></div>
-      <div><dt>9</dt><dd>inspectors that run in parallel, each returning its own score and evidence.</dd></div>
-      <div><dt>MIT</dt><dd>licensed. Every rule and score weight is in the source, nothing is hidden.</dd></div>
+      <div><dt>9</dt><dd>inspectors running in parallel, covering TLS and headers, phishing signals, DNS, WHOIS, links, speed, accessibility and SEO.</dd></div>
+      <div><dt>60+</dt><dd>individual checks. Each one records what it observed, the points it cost and how to fix it.</dd></div>
+      <div><dt>77</dt><dd>automated tests covering the scoring, the network safeguards and past false positives.</dd></div>
     </dl>
 
     <section class="about-split reveal" aria-labelledby="whyTitle">
       <h2 id="whyTitle">Why it exists</h2>
       <div>
-        <p>Most website scanners hand back a grade and a list of red labels. That is fine until a result looks wrong, and then there is nothing to check it against.</p>
-        <p>SiteSentinel keeps the receipts. Each finding carries the evidence it was based on, the points it cost and a plain explanation of the fix. When a result could be a false positive, the report says so instead of guessing.</p>
+        <p>Most website scanners give you a letter grade and a list of red labels. That's fine until a result looks wrong, because there's nothing to check it against.</p>
+        <p>SiteSentinel shows its working. Each finding includes the header, HTML snippet or script it was based on, how many points it cost and why that matters. When a result could be a false positive, the report says so.</p>
+      </div>
+    </section>
+
+    <section class="about-split reveal" aria-labelledby="scoreTitle">
+      <h2 id="scoreTitle">How the score works</h2>
+      <div>
+        <p>Every category starts at 100. A failed check deducts its full severity value and a warning deducts half. No category drops below 15 from ordinary findings, so a single issue can't make a site look like a total failure.</p>
+        <p>The overall score is a weighted average, and security and safety count the most. Categories that couldn't run are left out, not scored as zero. If most of a site can't be reached, the report says <em>Unable to Analyze</em> and shows no rating. A confirmed malware or phishing match is the one case that drops the score to zero.</p>
       </div>
     </section>
 
     <section class="about-split reveal" aria-labelledby="safeTitle">
       <h2 id="safeTitle">What it won't do</h2>
       <div>
-        <p>It only makes the requests a normal visitor's browser would: it fetches public pages, reads response headers, looks up DNS and WHOIS records and asks Google Safe Browsing when a key is configured.</p>
-        <p>It does not scan ports, try passwords, submit forms or send attack payloads. Addresses on private networks are refused before any request is made.</p>
+        <p>It only makes the requests a normal visit would: fetching public pages, reading response headers, looking up DNS and WHOIS records, and checking Google Safe Browsing when a key is configured.</p>
+        <p>It doesn't scan ports, try passwords, submit forms or send attack payloads. Before connecting, it refuses private network addresses, localhost and cloud metadata endpoints, and it checks again on every redirect so a hostile site can't point it somewhere internal.</p>
       </div>
     </section>
 
     <section class="about-split reveal" aria-labelledby="stackTitle">
       <h2 id="stackTitle">How it's built</h2>
       <ul class="stack-list">
-        <li><strong>Server</strong>Node.js and Express. Each category is its own check module under <code>src/checks</code>.</li>
-        <li><strong>Page analysis</strong>Axios for requests, Cheerio for HTML, Puppeteer for pages that need a real browser.</li>
-        <li><strong>Scoring</strong>One file, <code>score-calculator.util.js</code>, holds every weight. Tests cover it with Jest.</li>
-        <li><strong>Interface</strong>Plain HTML, CSS and JavaScript with no build step. The seal is drawn from the address you type.</li>
+        <li><strong>Server</strong>Node.js and Express. Each inspector is a separate module under <code>src/checks</code>. If one fails, its category drops out of the score and the rest still report.</li>
+        <li><strong>Page analysis</strong>Axios for requests, Cheerio for HTML, Puppeteer for pages that only render in a real browser, and tldts for domain parsing.</li>
+        <li><strong>Scoring</strong>Every weight is in one file, <code>score-calculator.util.js</code>, and Jest tests cover it.</li>
+        <li><strong>Interface</strong>Plain HTML, CSS and JavaScript with no build step. The seal on each report is drawn from the address you enter.</li>
       </ul>
     </section>
 
     <section class="about-split reveal" aria-labelledby="sourceTitle">
       <h2 id="sourceTitle">Read the source</h2>
       <div>
-        <p>SiteSentinel is a personal project by Nicholas Darwin. Issues and pull requests are welcome.</p>
+        <p>SiteSentinel is an open-source project by Nicholas Darwin. Every rule and weight is in the repository, and issues and pull requests are welcome.</p>
         <p><a class="btn btn-primary" href="https://github.com/NicholasDarwin/SiteSentinel" rel="noopener">View on GitHub</a></p>
       </div>
     </section>
